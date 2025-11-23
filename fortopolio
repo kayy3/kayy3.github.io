@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfolio Kayyis Zaki</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
+    header { background: #1a237e; color: white; padding: 20px; text-align: center; }
+    section { background: white; margin: 20px auto; padding: 20px; width: 90%; max-width: 900px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    h2 { color: #1a237e; border-left: 5px solid #1a237e; padding-left: 10px; }
+    ul { line-height: 1.7; }
+    .two-col { display: flex; gap: 20px; flex-wrap: wrap; }
+    .card { flex: 1; min-width: 250px; background: #e8eaf6; padding: 15px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Kayyis Zaki</h1>
+    <p>Portfolio Pribadi</p>
+  </header>
+
+  <section>
+    <h2>Detail Pribadi</h2>
+    <p><b>Nama:</b> Kayyis Zaki</p>
+    <p><b>Nomor Telepon:</b> 087718963929</p>
+    <p><b>Kewarganegaraan:</b> Indonesia</p>
+    <p><b>LinkedIn:</b> linkedin.com/in/kayyis-zaki-789868384</p>
+  </section>
+
+  <section>
+    <h2>Pendidikan</h2>
+    <h3>SMA Negeri 2 Tambun Selatan (Jul 2022 - Mei 2025)</h3>
+    <ul>
+      <li>Menguasai prinsip-prinsip IPA (fisika, kimia, biologi).</li>
+      <li>Memahami konsep dasar matematika.</li>
+      <li>Menguasai keterampilan TIK.</li>
+      <li>Menerapkan nilai Pancasila dan etika.</li>
+      <li>Mengembangkan kemampuan berbahasa Indonesia & asing.</li>
+    </ul>
+    <h3>Universitas Diponegoro (Agt 2025 - Sekarang)</h3>
+    <ul>
+      <li>Mempelajari metodologi penelitian ilmiah.</li>
+      <li>Menguasai perangkat lunak dan teknologi relevan.</li>
+      <li>Mengembangkan kemampuan analitis dan kritis.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Pengalaman Kerja</h2>
+    <h3>Pelatih - ASAD (Jun 2022 - Sekarang)</h3>
+    <ul>
+      <li>Memberikan bimbingan teknis dan motivasi.</li>
+      <li>Mengorganisir sesi pelatihan individu & kelompok.</li>
+      <li>Berkoordinasi untuk kelancaran kegiatan pelatihan.</li>
+      <li>Melakukan evaluasi berkala peserta.</li>
+      <li>Menyusun materi pelatihan yang sesuai kebutuhan.</li>
+      <li>Meningkatkan kemampuan peserta melalui teknik adaptif.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Keahlian</h2>
+    <div class="two-col">
+      <div class="card"><b>Mountering:</b> Baik</div>
+      <div class="card"><b>Matematika dasar:</b> Sangat baik</div>
+      <div class="card"><b>Manajemen waktu:</b> Luar biasa</div>
+      <div class="card"><b>Kepemimpinan:</b> Sangat baik</div>
+      <div class="card"><b>Kerja sama tim:</b> Luar biasa</div>
+      <div class="card"><b>Nilai Pancasila & Etika:</b> Sangat baik</div>
+      <div class="card"><b>TIK:</b> Sangat baik</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Bahasa</h2>
+    <ul>
+      <li>Indonesia — Sangat baik</li>
+      <li>Inggris — Baik</li>
+      <li>Arab — Pemula</li>
+      <li>Spanyol — Pemula</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Hobi</h2>
+    <ul>
+      <li>Olahraga</li>
+      <li>Bermain catur</li>
+      <li>Fotografi</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Pencapaian</h2>
+    <ul>
+      <li>Juara 1 lomba kebut dayung kayak double se-Bekasi.</li>
+      <li>Juara 2 lomba kebut dayung kayak single se-Bekasi.</li>
+      <li>Juara tanding silat pelajar putra kelas F 2x se-Bekasi.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Kegiatan Ekstrakurikuler</h2>
+    <h3>Duta Hukum dan HAM Jabar (Mei 2024 - Sekarang)</h3>
+    <ul>
+      <li>Terlibat dalam kegiatan sosial di lingkungan Bekasi.</li>
+    </ul>
+
+    <h3>Koordinator Divisi Climbing - Marabunta Adventure (2022 - 2025)</h3>
+    <ul>
+      <li>Mengorganisir jadwal latihan dan kegiatan panjat tebing.</li>
+      <li>Memimpin pelaksanaan event panjat tebing.</li>
+      <li>Mengkoordinasi keselamatan dan pelatihan teknis.</li>
+      <li>Mengelola perlengkapan panjat tebing.</li>
+      <li>Membangun kerja sama dengan komunitas di Bekasi.</li>
+    </ul>
+
+    <h3>Koordinator Bidang Upacara - OSIS SMAN 2 (2023 - 2025)</h3>
+    <ul>
+      <li>Mengatur pembagian tugas tim upacara.</li>
+      <li>Memimpin pelaksanaan upacara bendera.</li>
+      <li>Mengawasi kesiapan alat dan atribut upacara.</li>
+      <li>Berkoordinasi dengan guru dan panitia terkait.</li>
+    </ul>
+  </section>
+</body>
+</html>
