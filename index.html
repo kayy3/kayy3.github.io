@@ -19,11 +19,12 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: var(--bg-dark);
             color: white;
-            overflow: hidden; /* Lock scroll untuk kesan SPA pro */
+            overflow: hidden;
         }
 
         /* 1. ANIMATED GRADIENT BACKGROUND */
@@ -81,10 +82,10 @@
         .navbar button:hover {
             background: var(--primary);
             color: var(--bg-dark);
-            box-shadow: 0 0 15px var(--primary); /* Hover Glow Effect */
+            box-shadow: 0 0 15px var(--primary);
         }
 
-        /* 4. HERO SECTION & TYPING ANIMATION */
+        /* 4. HERO SECTION */
         .hero {
             height: 100vh;
             display: flex;
@@ -111,14 +112,14 @@
         .modal {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.85);
             backdrop-filter: blur(20px);
             z-index: 2000;
             display: none;
             justify-content: center;
             align-items: center;
             opacity: 0;
-            transition: 0.5s;
+            transition: opacity 0.6s ease;
         }
 
         .modal.active { display: flex; opacity: 1; }
@@ -130,20 +131,22 @@
             border: 1px solid var(--glass-border);
             padding: 40px;
             border-radius: 30px;
-            transform: translateY(50px);
-            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: scale(0.9) translateY(30px);
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
             max-height: 80vh;
             overflow-y: auto;
         }
 
-        .modal.active .modal-content { transform: translateY(0); }
+        .modal.active .modal-content { transform: scale(1) translateY(0); }
 
         .close-btn {
             position: absolute; top: 20px; right: 25px;
             font-size: 1.5rem; cursor: pointer; color: #ef4444;
+            transition: 0.3s;
         }
+        .close-btn:hover { transform: rotate(90deg); }
 
-        /* 6. BUTTON MODERN & SKILLS */
+        /* 6. BUTTONS & UI */
         .btn-modern {
             background: linear-gradient(45deg, var(--primary), var(--secondary));
             color: white; padding: 12px 25px; border-radius: 12px;
@@ -153,7 +156,6 @@
         }
 
         .btn-modern:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(56, 189, 248, 0.4); }
-
         .wa-btn { background: #22c55e; }
 
         .skill-grid {
@@ -165,12 +167,19 @@
             background: rgba(255,255,255,0.05);
             padding: 15px; border-radius: 15px; text-align: center;
             border: 1px solid var(--glass-border);
+            transition: 0.3s;
         }
+        .skill-item:hover { border-color: var(--primary); background: rgba(56, 189, 248, 0.1); }
 
         footer {
             position: fixed; bottom: 20px; width: 100%; text-align: center;
-            font-size: 0.7rem; opacity: 0.5;
+            font-size: 0.75rem; opacity: 0.5;
         }
+        footer a { color: var(--primary); text-decoration: none; }
+
+        /* Custom Scrollbar */
+        .modal-content::-webkit-scrollbar { width: 5px; }
+        .modal-content::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -178,8 +187,11 @@
     <div class="bg-animate"></div>
     <div id="particles-js"></div>
 
+    <audio id="click-sound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
+    <audio id="close-sound" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" preload="auto"></audio>
+
     <nav class="navbar">
-        <button onclick="closeModals()">HOME</button>
+        <button onclick="closeModals(); playSound('close-sound')">HOME</button>
         <button onclick="openModal('motivation')">MOTIVASI</button>
         <button onclick="openModal('about')">ABOUT</button>
         <button onclick="openModal('skills')">SKILLS</button>
@@ -187,9 +199,9 @@
     </nav>
 
     <main class="hero">
-        <div data-aos="zoom-in" data-aos-duration="1000">
+        <div data-aos="zoom-in" data-aos-duration="1200">
             <h1 style="color: white;">KAYYIS <span class="typing-box"></span></h1>
-            <p style="opacity: 0.6; letter-spacing: 3px;">SELAMAT MENGUNJUNGI WEBSITE SAYA!</p>
+            <p style="opacity: 0.6; letter-spacing: 3px; font-weight: 300;">SELAMAT MENGUNJUNGI WEBSITE SAYA!</p>
         </div>
     </main>
 
@@ -207,7 +219,7 @@
             <h2 style="color: var(--primary); margin-bottom: 20px;">Tentang Saya</h2>
             <p>Halo! kalian bisa memanggil saya kayyis. Saya adalah seorang yang selalu senang belajar, semoga dari web ini kita bisa saling mengenal</p>
             <hr style="margin: 20px 0; opacity: 0.1;">
-            <p style="font-weight: bold; margin-bottom: 10px;">Apakah Kamu Ingin Jadi Teman Ku?</p>
+            <p style="font-weight: 600; margin-bottom: 10px;">Apakah Kamu Ingin Jadi Teman Ku?</p>
             <div style="display: flex; gap: 10px;">
                 <a href="thankyouA.html" class="btn-modern">Iya</a>
                 <a href="thankyouB.html" class="btn-modern" style="background: rgba(255,255,255,0.1);">Tidak</a>
@@ -220,10 +232,10 @@
             <span class="close-btn" onclick="closeModals()">&times;</span>
             <h2 style="color: var(--primary); margin-bottom: 20px;">My Skills</h2>
             <div class="skill-grid">
-                <div class="skill-item"><i class="fab fa-html5"></i><br>HTML5</div>
-                <div class="skill-item"><i class="fab fa-css3-alt"></i><br>CSS3</div>
-                <div class="skill-item"><i class="fab fa-js"></i><br>JS Basics</div>
-                <div class="skill-item"><i class="fas fa-lightbulb"></i><br>Creative</div>
+                <div class="skill-item"><i class="fab fa-html5" style="color:#e34c26"></i><br>HTML5</div>
+                <div class="skill-item"><i class="fab fa-css3-alt" style="color:#264de4"></i><br>CSS3</div>
+                <div class="skill-item"><i class="fab fa-js" style="color:#f7df1e"></i><br>JS Basics</div>
+                <div class="skill-item"><i class="fas fa-lightbulb" style="color:#ffcc00"></i><br>Creative</div>
             </div>
         </div>
     </div>
@@ -232,24 +244,18 @@
         <div class="modal-content" style="text-align: center;" onclick="event.stopPropagation()">
             <span class="close-btn" onclick="closeModals()">&times;</span>
             <h2 style="margin-bottom: 10px;">Hubungi Saya</h2>
-            <p>Bagi kalian yang tidak di acc di akun yang pertama, kalian bisa follow akun yang satunya</p>
+            <p style="font-size: 0.9rem; opacity: 0.7;">Bagi kalian yang tidak di acc di akun yang pertama, kalian bisa follow akun yang satunya</p>
             <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
                 <a href="https://www.instagram.com/kiza_kayy/" class="btn-modern">
                     <i class="fab fa-instagram"></i> Follow @kiza_kayy
                 </a>
-                <a href="https://wa.me/6287718963929" class="btn-modern wa-btn">
-                    <i class="fab fa-whatsapp"></i> WhatsApp Me
-                </a>
-                <a href="https://sites.google.com/view/kayyis-web/beranda" style="color: white; font-size: 0.8rem; margin-top: 10px;">Web utama kita</a>
             </div>
         </div>
     </div>
 
     <footer>
-        &copy; 2024 Kayyis. Terima kasih telah mengunjungi website saya!
-        <ul>
-                <li><a href="https://sites.google.com/view/kayyis-web/beranda">Web utama kita</a></li>
-            </ul>
+        &copy; 2024 Kayyis. Terima kasih telah mengunjungi website saya! | 
+        <a href="https://sites.google.com/view/kayyis-web/beranda">Web Utama</a>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
@@ -259,39 +265,66 @@
     <script>
         AOS.init();
 
-        // 1. ADVANCED TYPING ANIMATION
+        // 1. Typing Animation
         new Typed('.typing-box', {
             strings: ['PORTFOLIO', 'STUDENT', 'LEARNER'],
-            typeSpeed: 100,
-            backSpeed: 50,
+            typeSpeed: 80,
+            backSpeed: 40,
             loop: true
         });
 
-        // 2. PARTICLE BACKGROUND
+        // 2. Particles Background
         particlesJS('particles-js', {
             particles: {
                 number: { value: 60 },
                 color: { value: '#38bdf8' },
                 shape: { type: 'circle' },
-                opacity: { value: 0.5 },
+                opacity: { value: 0.4 },
                 size: { value: 2 },
                 line_linked: { enable: true, distance: 150, color: '#38bdf8', opacity: 0.2, width: 1 },
-                move: { enable: true, speed: 2 }
+                move: { enable: true, speed: 1.5 }
             }
         });
 
-        // 3. MODAL LOGIC
+        // 3. Sound Effect Logic
+        function playSound(id) {
+            const sound = document.getElementById(id);
+            sound.currentTime = 0;
+            sound.play().catch(e => console.log("Audio play blocked by browser"));
+        }
+
+        // 4. Smooth Modal Logic
         function openModal(id) {
-            closeModals();
+            const modals = document.querySelectorAll('.modal');
+            let anyActive = false;
+
+            modals.forEach(m => {
+                if (m.classList.contains('active')) anyActive = true;
+            });
+
+            playSound('click-sound');
+
+            if (anyActive) {
+                closeModals();
+                setTimeout(() => { executeOpen(id); }, 500);
+            } else {
+                executeOpen(id);
+            }
+        }
+
+        function executeOpen(id) {
             const m = document.getElementById(id);
             m.style.display = 'flex';
-            setTimeout(() => m.classList.add('active'), 10);
+            setTimeout(() => { m.classList.add('active'); }, 50);
         }
 
         function closeModals() {
-            document.querySelectorAll('.modal').forEach(m => {
+            const activeModals = document.querySelectorAll('.modal.active');
+            if (activeModals.length > 0) playSound('close-sound');
+            
+            activeModals.forEach(m => {
                 m.classList.remove('active');
-                setTimeout(() => m.style.display = 'none', 500);
+                setTimeout(() => { m.style.display = 'none'; }, 600);
             });
         }
     </script>
