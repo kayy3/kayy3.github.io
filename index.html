@@ -108,7 +108,7 @@
             font-weight: 400;
         }
 
-        /* 5. MODAL SYSTEM (REVEAL ANIMATION) */
+        /* 5. MODAL SYSTEM */
         .modal {
             position: fixed;
             inset: 0;
@@ -133,7 +133,7 @@
             border-radius: 30px;
             transform: scale(0.9) translateY(30px);
             transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-            max-height: 80vh;
+            max-height: 85vh;
             overflow-y: auto;
         }
 
@@ -146,7 +146,32 @@
         }
         .close-btn:hover { transform: rotate(90deg); }
 
-        /* 6. BUTTONS & UI */
+        /* 6. SKILLS PROGRESS BAR STYLES */
+        .skill-section-title { font-size: 1.1rem; margin: 20px 0 10px; color: var(--primary); font-weight: 700; border-left: 4px solid var(--primary); padding-left: 10px; }
+        
+        .skill-container { display: flex; flex-direction: column; gap: 15px; }
+        
+        .skill-item-pro { 
+            background: rgba(255,255,255,0.03); 
+            padding: 15px; 
+            border-radius: 15px; 
+            border: 1px solid var(--glass-border); 
+            transition: 0.3s;
+        }
+        
+        .skill-info { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; }
+        
+        .progress-bar-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
+        
+        .progress-bar-fill { 
+            height: 100%; 
+            background: linear-gradient(90deg, var(--primary), var(--secondary)); 
+            width: 0%; 
+            transition: width 1.5s cubic-bezier(0.1, 0.42, 0.41, 1);
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+        }
+
+        /* 7. BUTTONS & UI */
         .btn-modern {
             background: linear-gradient(45deg, var(--primary), var(--secondary));
             color: white; padding: 12px 25px; border-radius: 12px;
@@ -156,20 +181,6 @@
         }
 
         .btn-modern:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(56, 189, 248, 0.4); }
-        .wa-btn { background: #22c55e; }
-
-        .skill-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 15px; margin-top: 20px;
-        }
-
-        .skill-item {
-            background: rgba(255,255,255,0.05);
-            padding: 15px; border-radius: 15px; text-align: center;
-            border: 1px solid var(--glass-border);
-            transition: 0.3s;
-        }
-        .skill-item:hover { border-color: var(--primary); background: rgba(56, 189, 248, 0.1); }
 
         footer {
             position: fixed; bottom: 20px; width: 100%; text-align: center;
@@ -177,7 +188,6 @@
         }
         footer a { color: var(--primary); text-decoration: none; }
 
-        /* Custom Scrollbar */
         .modal-content::-webkit-scrollbar { width: 5px; }
         .modal-content::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
     </style>
@@ -209,7 +219,7 @@
         <div class="modal-content" onclick="event.stopPropagation()">
             <span class="close-btn" onclick="closeModals()">&times;</span>
             <h2 style="color: var(--primary); margin-bottom: 20px;">Motivasi</h2>
-            <p>Saya percaya bahwa setiap hari adalah kesempatan untuk belajar hal baru dan mengembangkan diri. Saya selalu berusaha untuk memberikan yang terbaik dalam setiap hal yang saya kerjakan, dan saya berkomitmen untuk terus belajar dan berkembang. Saya berharap dapat berbagi pengetahuan dan pengalaman saya dengan orang lain serta mendapatkan inspirasi dari mereka.</p>
+            <p>Saya percaya bahwa setiap hari adalah kesempatan untuk belajar hal baru dan mengembangkan diri. Saya selalu berusaha untuk memberikan yang terbaik dalam setiap hal yang saya kerjakan, dan saya berkomitmen untuk terus belajar dan berkembang.</p>
         </div>
     </div>
 
@@ -230,12 +240,38 @@
     <div id="skills" class="modal" onclick="closeModals()">
         <div class="modal-content" onclick="event.stopPropagation()">
             <span class="close-btn" onclick="closeModals()">&times;</span>
-            <h2 style="color: var(--primary); margin-bottom: 20px;">My Skills</h2>
-            <div class="skill-grid">
-                <div class="skill-item"><i class="fab fa-html5" style="color:#e34c26"></i><br>HTML5</div>
-                <div class="skill-item"><i class="fab fa-css3-alt" style="color:#264de4"></i><br>CSS3</div>
-                <div class="skill-item"><i class="fab fa-js" style="color:#f7df1e"></i><br>JS Basics</div>
-                <div class="skill-item"><i class="fas fa-lightbulb" style="color:#ffcc00"></i><br>Creative</div>
+            <h2 style="color: var(--primary); margin-bottom: 10px;">Kemampuan Saya</h2>
+            
+            <div class="skill-section-title">Pemrograman (Avg. 80%)</div>
+            <div class="skill-container">
+                <div class="skill-item-pro">
+                    <div class="skill-info"><span>HTML, CSS & JS Basics</span><span>80%</span></div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" data-percent="80%"></div></div>
+                </div>
+            </div>
+
+            <div class="skill-section-title">Bahasa (Languages)</div>
+            <div class="skill-container">
+                <div class="skill-item-pro">
+                    <div class="skill-info"><span>Indonesia</span><span>100%</span></div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" data-percent="100%"></div></div>
+                </div>
+                <div class="skill-item-pro">
+                    <div class="skill-info"><span>Inggris</span><span>82%</span></div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" data-percent="82%"></div></div>
+                </div>
+                <div class="skill-item-pro">
+                    <div class="skill-info"><span>Arab</span><span>34%</span></div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" data-percent="34%"></div></div>
+                </div>
+                <div class="skill-item-pro">
+                    <div class="skill-info"><span>Spanyol</span><span>23%</span></div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" data-percent="23%"></div></div>
+                </div>
+                <div class="skill-item-pro">
+                    <div class="skill-info"><span>Jepang</span><span>12%</span></div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" data-percent="12%"></div></div>
+                </div>
             </div>
         </div>
     </div>
@@ -265,7 +301,6 @@
     <script>
         AOS.init();
 
-        // 1. Typing Animation
         new Typed('.typing-box', {
             strings: ['PORTFOLIO', 'STUDENT', 'LEARNER'],
             typeSpeed: 80,
@@ -273,7 +308,6 @@
             loop: true
         });
 
-        // 2. Particles Background
         particlesJS('particles-js', {
             particles: {
                 number: { value: 60 },
@@ -286,21 +320,16 @@
             }
         });
 
-        // 3. Sound Effect Logic
         function playSound(id) {
             const sound = document.getElementById(id);
             sound.currentTime = 0;
-            sound.play().catch(e => console.log("Audio play blocked by browser"));
+            sound.play().catch(e => console.log("Audio play blocked"));
         }
 
-        // 4. Smooth Modal Logic
         function openModal(id) {
             const modals = document.querySelectorAll('.modal');
             let anyActive = false;
-
-            modals.forEach(m => {
-                if (m.classList.contains('active')) anyActive = true;
-            });
+            modals.forEach(m => { if (m.classList.contains('active')) anyActive = true; });
 
             playSound('click-sound');
 
@@ -315,7 +344,18 @@
         function executeOpen(id) {
             const m = document.getElementById(id);
             m.style.display = 'flex';
-            setTimeout(() => { m.classList.add('active'); }, 50);
+            setTimeout(() => { 
+                m.classList.add('active');
+                // Jalankan animasi progress bar jika menu skills dibuka
+                if(id === 'skills') {
+                    const bars = m.querySelectorAll('.progress-bar-fill');
+                    setTimeout(() => {
+                        bars.forEach(bar => {
+                            bar.style.width = bar.getAttribute('data-percent');
+                        });
+                    }, 400);
+                }
+            }, 50);
         }
 
         function closeModals() {
@@ -324,6 +364,9 @@
             
             activeModals.forEach(m => {
                 m.classList.remove('active');
+                // Reset bar ke 0% saat ditutup
+                const bars = m.querySelectorAll('.progress-bar-fill');
+                bars.forEach(bar => bar.style.width = '0%');
                 setTimeout(() => { m.style.display = 'none'; }, 600);
             });
         }
