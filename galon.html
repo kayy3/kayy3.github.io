@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Informasi Galon Lantai 2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Animasi Getar untuk Password Salah */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans min-h-screen pb-16 text-slate-800">
+
+    <header class="bg-gradient-to-r content-center from-blue-700 to-indigo-800 text-white shadow-lg py-6 px-4 text-center sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="text-left">
+                <h1 class="text-2xl font-extrabold tracking-tight flex items-center gap-2">
+                    <i class="fas fa-droplet text-cyan-300 animate-bounce"></i> SIM-GALON L2
+                </h1>
+                <p class="text-xs text-blue-200 mt-1 font-medium">Transparansi Ketersediaan Air Kos | PPM BKI 2026</p>
+            </div>
+            
+            <div class="flex bg-white/10 backdrop-blur-md p-1 rounded-xl border border-white/20">
+                <button onclick="switchTab('warga')" id="navWarga" class="px-4 py-2 rounded-lg text-sm font-semibold transition bg-white text-blue-800 shadow">
+                    <i class="fas fa-users mr-1"></i> Dashboard Warga
+                </button>
+                <button onclick="switchTab('admin')" id="navAdmin" class="px-4 py-2 rounded-lg text-sm font-semibold transition text-white hover:bg-white/10">
+                    <i class="fas fa-user-shield mr-1"></i> Area Admin
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 mt-6">
+
+        <div id="tabWarga" class="space-y-6">
+            
+            <div class="bg-amber-50 border-l-4 border-amber-500 p-5 rounded-r-xl shadow-sm">
+                <div class="flex gap-3">
+                    <div class="text-amber-500 text-xl"><i class="fas fa-bullhorn"></i></div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-amber-900 text-base">Catatan & Pengumuman PJ Lantai</h3>
+                        <p id="viewPengumuman" class="text-amber-800 text-sm mt-1 whitespace-pre-line">Belum ada pengumuman terbaru dari koordinator.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Kas Galon Sisa Saat Ini</span>
+                        <h2 id="viewTotalKas" class="text-3xl font-black text-emerald-600 mt-1">Rp 0</h2>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-4 border-t pt-2 border-slate-100 space-y-0.5" id="hitungDetilKas">
+                        </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Periode Aktif</span>
+                        <h2 id="viewPeriode" class="text-2xl font-black text-blue-600 mt-1">Juni 2026</h2>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-4 border-t pt-2 border-slate-100">
+                        Semua pembayaran & tugas di-reset setiap bulan baru.
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Presentase Lunas</span>
+                        <div class="flex items-center gap-2 mt-2">
+                            <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                                <div id="progressBayar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                            <span id="textProgress" class="text-sm font-bold text-slate-600">0%</span>
+                        </div>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-4 border-t pt-2 border-slate-100 flex justify-between">
+                        <span id="statsLunas">Lunas: 0</span>
+                        <span id="statsBelum">Belum: 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-lg">Daftar Transparansi Iuran & Tugas</h3>
+                        <p class="text-xs text-slate-400 mt-1">Seluruh warga lantai wajib memantau kebenaran status di bawah ini.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="cariWarga" placeholder="Cari nama..." oninput="filterTabelWarga()" class="text-xs border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/70 border-b border-slate-100 text-slate-500 font-bold text-xs tracking-wider">
+                                <th class="p-4 pl-6">Nama Warga</th>
+                                <th class="p-4 text-center">Status Iuran (Rp 2k)</th>
+                                <th class="p-4 text-center">Petugas Angkat Galon</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelWargaBody" class="divide-y divide-slate-100 text-sm">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="tabAdmin" class="hidden">
+            
+            <div id="loginSection" class="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 max-w-md mx-auto text-center transition-all">
+                <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-shield-halved text-blue-600 text-2xl"></i>
+                </div>
+                <h3 class="font-bold text-slate-800 text-xl">Masuk Mode Pengurus</h3>
+                <p class="text-slate-400 text-xs mt-1 mb-6">Silakan masukkan kode pengurus Anda untuk melakukan edit data.</p>
+                
+                <div id="passWrapper" class="relative rounded-xl overflow-hidden transition-all duration-200 mb-4">
+                    <input type="password" id="passInput" placeholder="Password Admin" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-center focus:ring-2 focus:ring-blue-500 focus:outline-none tracking-widest font-bold bg-slate-50">
+                </div>
+                <button onclick="verifikasiAdmin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition shadow-md shadow-blue-200">
+                    Buka Akses Control Panel
+                </button>
+            </div>
+
+            <div id="adminPanelSection" class="hidden space-y-6">
+                
+                <div class="bg-slate-800 text-white p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <span class="text-xs bg-blue-500 text-white font-bold px-2.5 py-1 rounded-md uppercase">Mode Pengurus Aktif</span>
+                        <h2 class="text-lg font-bold mt-1.5">Halo PJ Lantai 2, Selamat Bertugas!</h2>
+                    </div>
+                    <button onclick="keluarAdmin()" class="bg-red-500 hover:bg-red-600 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
+                        <i class="fas fa-sign-out-alt mr-1"></i> Keluar Sistem
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
+                        <h3 class="font-bold text-slate-800 border-b pb-2"><i class="fas fa-sliders-h text-blue-500 mr-2"></i>Konfigurasi Dasar</h3>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase">Bulan</label>
+                                <select id="setBulan" onchange="simpanConfigDasar()" class="w-full mt-1 border border-slate-200 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="Januari">Januari</option>
+                                    <option value="Februari">Februari</option>
+                                    <option value="Maret">Maret</option>
+                                    <option value="April">April</option>
+                                    <option value="Mei">Mei</option>
+                                    <option value="Juni">Juni</option>
+                                    <option value="Juli">Juli</option>
+                                    <option value="Agustus">Agustus</option>
+                                    <option value="September">September</option>
+                                    <option value="Oktober">Oktober</option>
+                                    <option value="November">November</option>
+                                    <option value="Desember">Desember</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase">Tahun</label>
+                                <input type="number" id="setTahun" oninput="simpanConfigDasar()" class="w-full mt-1 border border-slate-200 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase">Edit Catatan / Pengumuman Warga</label>
+                            <textarea id="setPengumuman" rows="4" class="w-full mt-1 border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tulis catatan penting..."></textarea>
+                            <button onclick="simpanCatatan()" class="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 rounded-lg transition">
+                                Perbarui Pengumuman di Depan
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col justify-between gap-4">
+                        <div class="space-y-4">
+                            <h3 class="font-bold text-slate-800 border-b pb-2"><i class="fas fa-wallet text-emerald-500 mr-2"></i>Pengelolaan Keuangan Manual</h3>
+                            
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase">Uang Kas Sisa Bulan Sebelumnya (Rp)</label>
+                                <input type="number" id="setKasSebelumnya" placeholder="Misal: 50000" oninput="simpanDataKeuangan()" class="w-full mt-1 border border-slate-200 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-slate-700">
+                                <p class="text-[10px] text-slate-400 mt-0.5">Uang sisa bulan lalu yang akan digabungkan ke kas periode ini.</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase">Pengeluaran Lain-lain / Tambahan (Rp)</label>
+                                <input type="number" id="setPotongan" placeholder="Misal: 5000 untuk beli tisu dispenser" oninput="simpanDataKeuangan()" class="w-full mt-1 border border-slate-200 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <p class="text-[10px] text-slate-400 mt-0.5">Potongan manual selain biaya beli galon otomatis (seperti beli kain lap, dispenser rusak, dll).</p>
+                            </div>
+
+                            <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 text-xs text-blue-800">
+                                <i class="fas fa-info-circle mr-1"></i> <strong>Sistem Otomatis:</strong> Setiap warga yang dicentang <strong>"Sudah Tugas Angkat Galon"</strong> di tabel bawah akan otomatis memotong kas sebesar <strong>Rp 7.500</strong>.
+                            </div>
+                        </div>
+
+                        <div class="bg-red-50 p-4 rounded-xl border border-red-100">
+                            <h4 class="text-xs font-bold text-red-800 uppercase">Zona Bahaya</h4>
+                            <p class="text-[11px] text-red-500 mt-0.5">Gunakan tombol ini saat memasuki bulan baru untuk mengembalikan semua status ke "Belum".</p>
+                            <button onclick="resetSemuaStatus()" class="mt-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">
+                                Reset Semua Pembayaran & Tugas
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-3 mb-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                                <i class="fas fa-bullhorn text-amber-500"></i> Generator Jarkoman Otomatis
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-1">Disusun real-time berdasarkan tanda centang tabel warga di bawah.</p>
+                        </div>
+                        <button onclick="salinTemplateJarkom()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+                            <i class="fas fa-copy"></i> Salin Teks Jarkoman
+                        </button>
+                    </div>
+                    <textarea id="jarkomPreview" rows="8" class="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl text-xs font-mono text-slate-700 focus:outline-none" readonly></textarea>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div class="p-5 border-b border-slate-100">
+                        <h3 class="font-bold text-slate-800 text-lg">Input Status Manual Warga</h3>
+                        <p class="text-xs text-slate-400 mt-1">Cukup berikan tanda centang, sistem akan langsung menyimpan perubahan secara otomatis.</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold text-xs tracking-wider">
+                                    <th class="p-4 pl-6">Nama Warga</th>
+                                    <th class="p-4 text-center">Sudah Bayar? (Rp 2.000)</th>
+                                    <th class="p-4 text-center">Sudah Tugas Angkat Galon? (Auto -7.5k)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelAdminBody" class="divide-y divide-slate-100 text-sm">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 mt-12 px-4 max-w-4xl mx-auto border-t border-slate-200/60 pt-6">
+        <p>© 2026 Koordinator Galon Lantai 2. Dikembangkan untuk transparansi kas & keadilan logistik kos.</p>
+    </footer>
+
+    <script>
+        const dataMasterWarga = [
+            { nama: "abdul", bayar: false, angkat: true },
+            { nama: "Zaidan", bayar: true, angkat: true },
+            { nama: "Arzakie", bayar: false, angkat: true },
+            { nama: "Bayu", bayar: true, angkat: true },
+            { nama: "Juan", bayar: false, angkat: true },
+            { nama: "Yudho", bayar: true, angkat: false },
+            { nama: "Daryn", bayar: false, angkat: false },
+            { nama: "Kayyis", bayar: true, angkat: false },
+            { nama: "Gerald", bayar: true, angkat: false },
+            { nama: "Aan", bayar: true, angkat: false },
+            { nama: "Fahril", bayar: true, angkat: false },
+            { nama: "Jekie", bayar: false, angkat: false },
+            { nama: "Reza", bayar: false, angkat: false },
+            { nama: "Joerdan", bayar: false, angkat: false },
+            { nama: "Farrel", bayar: false, angkat: false },
+            { nama: "Hidvi", bayar: true, angkat: false },
+            { nama: "Hamim", bayar: true, angkat: false },
+            { nama: "Drajat", bayar: false, angkat: false },
+            { nama: "Osama", bayar: false, angkat: false },
+            { nama: "Ryan", bayar: false, angkat: false },
+            { nama: "Daffa", bayar: false, angkat: false },
+            { nama: "Diko", bayar: false, angkat: false },
+            { nama: "Fadly", bayar: true, angkat: false }
+        ];
+
+        let dataWarga = JSON.parse(localStorage.getItem('simGalon_dataWarga')) || dataMasterWarga;
+        let pengumuman = localStorage.getItem('simGalon_pengumuman') || "Halo mas-mas Lantai 2!\nHarap segera melunasi iuran kas galon jika diingatkan ya, agar ketersediaan air minum di dispenser lantai kita tetap terjaga dan aman sentosa.";
+        let kasSebelumnya = parseInt(localStorage.getItem('simGalon_kasSebelumnya')) || 0;
+        let pengeluaranKas = parseInt(localStorage.getItem('simGalon_pengeluaran')) || 0;
+        let configBulan = localStorage.getItem('simGalon_bulan') || "Juni";
+        let configTahun = localStorage.getItem('simGalon_tahun') || "2026";
+
+        let loginSessionActive = false;
+
+        function initApp() {
+            document.getElementById('setBulan').value = configBulan;
+            document.getElementById('setTahun').value = configTahun;
+            document.getElementById('setPengumuman').value = pengumuman;
+            document.getElementById('setKasSebelumnya').value = kasSebelumnya;
+            document.getElementById('setPotongan').value = pengeluaranKas;
+
+            renderDashboard();
+            renderAdminPanel();
+        }
+
+        // Kalkulasi Keuangan Baru Berdasarkan Regulasi Request User
+        function renderDashboard() {
+            document.getElementById('viewPengumuman').innerText = pengumuman;
+            document.getElementById('viewPeriode').innerText = `${configBulan} ${configTahun}`;
+
+            let wargaLunasCount = 0;
+            let totalGalonTerbeli = 0;
+
+            dataWarga.forEach(w => { 
+                if(w.bayar) wargaLunasCount++; 
+                if(w.angkat) totalGalonTerbeli++; // Setiap tanda tetesan air (💧) dihitung sebagai 1 kali beli galon
+            });
+
+            let totalIuranBulanIni = wargaLunasCount * 2000;
+            let totalBiayaGalon = totalGalonTerbeli * 7500; // Auto-potong 7.5k per galon
+            
+            // Rumus Total Akhir Kas Bersih
+            let totalKasBersih = kasSebelumnya + totalIuranBulanIni - totalBiayaGalon - pengeluaranKas;
+            
+            // Tampilkan Sisa Kas Akhir
+            document.getElementById('viewTotalKas').innerText = formatKeuangan(totalKasBersih);
+            
+            // Breakdown Transparansi untuk Warga Kos agar tidak curiga
+            document.getElementById('hitungDetilKas').innerHTML = `
+                <div>• Kas Bulan Lalu: <span class="font-medium text-slate-700">${formatKeuangan(kasSebelumnya)}</span></div>
+                <div>• Iuran Masuk (+): <span class="font-medium text-emerald-600">${formatKeuangan(totalIuranBulanIni)}</span></div>
+                <div>• Beli ${totalGalonTerbeli} Galon (-): <span class="font-medium text-red-600">${formatKeuangan(totalBiayaGalon)}</span></div>
+                <div>• Lain-lain (-): <span class="font-medium text-red-600">${formatKeuangan(pengeluaranKas)}</span></div>
+            `;
+            
+            let persentase = Math.round((wargaLunasCount / dataWarga.length) * 100);
+            document.getElementById('progressBayar').style.width = `${persentase}%`;
+            document.getElementById('textProgress').innerText = `${persentase}%`;
+            document.getElementById('statsLunas').innerText = `Lunas: ${wargaLunasCount}`;
+            document.getElementById('statsBelum').innerText = `Belum: ${dataWarga.length - wargaLunasCount}`;
+
+            buildTabelWargaPublic();
+        }
+
+        function buildTabelWargaPublic() {
+            let html = '';
+            dataWarga.forEach(warga => {
+                html += `
+                    <tr class="hover:bg-slate-50/60 transition border-b border-slate-100/80">
+                        <td class="p-4 pl-6 font-semibold text-slate-700 capitalize">${warga.nama}</td>
+                        <td class="p-4 text-center">
+                            ${warga.bayar ? 
+                                '<span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-bold"><i class="fas fa-check"></i> Lunas</span>' : 
+                                '<span class="inline-flex items-center gap-1 bg-red-50 text-red-600 border border-red-100 px-3 py-1 rounded-full text-xs font-bold"><i class="fas fa-clock"></i> Belum</span>'}
+                        </td>
+                        <td class="p-4 text-center">
+                            ${warga.angkat ? 
+                                '<span class="inline-flex items-center gap-1 bg-cyan-50 text-cyan-700 border border-cyan-200 px-3 py-1 rounded-full text-xs font-bold"><i class="fas fa-droplet"></i> Sudah</span>' : 
+                                '<span class="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full text-xs font-bold"><i class="fas fa-hourglass-half"></i> Belum</span>'}
+                        </td>
+                    </tr>
+                `;
+            });
+            document.getElementById('tabelWargaBody').innerHTML = html;
+        }
+
+        function filterTabelWarga() {
+            let input = document.getElementById('cariWarga').value.toLowerCase();
+            let rows = document.querySelectorAll('#tabelWargaBody tr');
+
+            rows.forEach(row => {
+                let nama = row.querySelector('td:first-child').innerText.toLowerCase();
+                if (nama.includes(input)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        }
+
+        function renderAdminPanel() {
+            let html = '';
+            dataWarga.forEach((warga, index) => {
+                html += `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                        <td class="p-4 pl-6 font-medium text-slate-800 capitalize">${warga.nama}</td>
+                        <td class="p-4 text-center">
+                            <input type="checkbox" ${warga.bayar ? 'checked' : ''} onchange="updateWargaCheckbox(${index}, 'bayar')" class="w-5 h-5 rounded text-blue-600 border-slate-300 focus:ring-blue-500">
+                        </td>
+                        <td class="p-4 text-center">
+                            <input type="checkbox" ${warga.angkat ? 'checked' : ''} onchange="updateWargaCheckbox(${index}, 'angkat')" class="w-5 h-5 rounded text-cyan-600 border-slate-300 focus:ring-cyan-500">
+                        </td>
+                    </tr>
+                `;
+            });
+            document.getElementById('tabelAdminBody').innerHTML = html;
+            generateFormatJarkom();
+        }
+
+        function updateWargaCheckbox(index, properti) {
+            dataWarga[index][properti] = !dataWarga[index][properti];
+            simpanKeLocalStorage();
+            renderDashboard();
+            generateFormatJarkom();
+        }
+
+        function simpanConfigDasar() {
+            configBulan = document.getElementById('setBulan').value;
+            configTahun = document.getElementById('setTahun').value || "2026";
+            
+            localStorage.setItem('simGalon_bulan', configBulan);
+            localStorage.setItem('simGalon_tahun', configTahun);
+            
+            renderDashboard();
+            generateFormatJarkom();
+        }
+
+        function simpanCatatan() {
+            pengumuman = document.getElementById('setPengumuman').value;
+            localStorage.setItem('simGalon_pengumuman', pengumuman);
+            renderDashboard();
+            alert("Pengumuman berhasil diperbarui!");
+        }
+
+        // Live Save data Keuangan saat Admin mengetik angka di form input
+        function simpanDataKeuangan() {
+            kasSebelumnya = parseInt(document.getElementById('setKasSebelumnya').value) || 0;
+            pengeluaranKas = parseInt(document.getElementById('setPotongan').value) || 0;
+            
+            localStorage.setItem('simGalon_kasSebelumnya', kasSebelumnya);
+            localStorage.setItem('simGalon_pengeluaran', pengeluaranKas);
+            
+            renderDashboard();
+        }
+
+        function resetSemuaStatus() {
+            if (confirm("Apakah mas yakin ingin me-reset SEMUA status warga? Sisa kas saat ini disarankan dicatat dulu untuk dijadikan 'Kas Bulan Sebelumnya' nanti.")) {
+                dataWarga.forEach(w => {
+                    w.bayar = false;
+                    w.angkat = false;
+                });
+                simpanKeLocalStorage();
+                renderDashboard();
+                renderAdminPanel();
+                alert("Semua status warga telah di-reset ke awal!");
+            }
+        }
+
+        function generateFormatJarkom() {
+            let text = `🏠💧 _[IURAN GALON]_ 🏠💧\nالسلام عليكم ورحمة الله وبركاته\n\n`;
+            text += `Dikarnakan kas galon terisisa sedikit 🫠\n`;
+            text += `Mohon disiapkan uang iurannya ya mas-mas, iuran akan diambil mulai pada:\n`;
+            text += `📅: Rabu, 1 April 2026\n`;
+            text += `⏰: ba'da ngaji malam\n`;
+            text += `_yang mau tf bisa ke nomor GO-PAY_ (087718964929) [gk bisa qris]\n\n`;
+            text += `Pembayaran Batch (Periode: ${configBulan} ${configTahun})\n`;
+
+            dataWarga.forEach(warga => {
+                let statusBayar = warga.bayar ? '✅' : '';
+                let statusAngkat = warga.angkat ? '💧' : '';
+                
+                if (statusBayar || statusAngkat) {
+                    text += `- ${warga.nama} ${statusBayar}${statusAngkat}\n`;
+                } else {
+                    text += `- ${warga.nama}\n`;
+                }
+            });
+
+            text += `\nKet:\n✅: sudah bayar iuran\n💧: sudah ambil/angkat galon\n\n`;
+            text += `NB: bagi yang blum bisa iuran segera sertakan alasan yang jelas!\n\n`;
+            text += `Tetap diniati karena Allah, Semoga barokah\nالحمد لله جزا كم لله خيرا\nوَالسَّلاَمُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ\n\n`;
+            text += `___________________________\n`;
+            text += `_Koordinator Galon Lantai 2_\n`;
+            text += `_PPM BKI 2026_`;
+
+            document.getElementById('jarkomPreview').value = text;
+        }
+
+        function salinTemplateJarkom() {
+            const jarkomArea = document.getElementById('jarkomPreview');
+            jarkomArea.select();
+            jarkomArea.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(jarkomArea.value);
+            alert("Teks Jarkoman WhatsApp berhasil disalin!");
+        }
+
+        function simpanKeLocalStorage() {
+            localStorage.setItem('simGalon_dataWarga', JSON.stringify(dataWarga));
+        }
+
+        function formatKeuangan(angka) {
+            // Bisa menampilkan angka minus jika pengeluaran > pemasukan agar transparan
+            if (angka < 0) {
+                return "-Rp " + Math.abs(angka).toLocaleString('id-ID');
+            }
+            return "Rp " + angka.toLocaleString('id-ID');
+        }
+
+        function switchTab(tabId) {
+            const btnWarga = document.getElementById('navWarga');
+            const btnAdmin = document.getElementById('navAdmin');
+            const pnlWarga = document.getElementById('tabWarga');
+            const pnlAdmin = document.getElementById('tabAdmin');
+
+            if (tabId === 'warga') {
+                pnlWarga.classList.remove('hidden');
+                pnlAdmin.classList.add('hidden');
+                btnWarga.className = "px-4 py-2 rounded-lg text-sm font-semibold transition bg-white text-blue-800 shadow";
+                btnAdmin.className = "px-4 py-2 rounded-lg text-sm font-semibold transition text-white hover:bg-white/10";
+            } else {
+                pnlWarga.classList.add('hidden');
+                pnlAdmin.classList.remove('hidden');
+                btnAdmin.className = "px-4 py-2 rounded-lg text-sm font-semibold transition bg-white text-blue-800 shadow";
+                btnWarga.className = "px-4 py-2 rounded-lg text-sm font-semibold transition text-white hover:bg-white/10";
+                checkLoginStatus();
+            }
+        }
+
+        function verifikasiAdmin() {
+            const input = document.getElementById('passInput').value;
+            const wrapper = document.getElementById('passWrapper');
+
+            if (input === '12344321') {
+                loginSessionActive = true;
+                wrapper.classList.remove('animate-shake'); 
+                checkLoginStatus();
+            } else {
+                wrapper.classList.remove('animate-shake');
+                void wrapper.offsetWidth; 
+                wrapper.classList.add('animate-shake');
+                document.getElementById('passInput').value = '';
+            }
+        }
+
+        function keluarAdmin() {
+            loginSessionActive = false;
+            document.getElementById('passInput').value = '';
+            checkLoginStatus();
+        }
+
+        function checkLoginStatus() {
+            const loginBox = document.getElementById('loginSection');
+            const controlBox = document.getElementById('adminPanelSection');
+
+            if (loginSessionActive) {
+                loginBox.classList.add('hidden');
+                controlBox.classList.remove('hidden');
+            } else {
+                loginBox.classList.remove('hidden');
+                controlBox.classList.add('hidden');
+            }
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
