@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAS SOSMA - Transparansi & Kepedulian Sosial</title>
+    <!-- Tailwind CSS & FontAwesome Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Animasi Getar untuk Password Salah */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans min-h-screen pb-16 text-slate-800">
+
+    <!-- HEADER UTAMA -->
+    <header class="bg-gradient-to-r from-teal-800 via-emerald-800 to-cyan-900 text-white shadow-lg py-6 px-4 text-center sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="text-left">
+                <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">Aplikasi Pembukuan</span>
+                <h1 class="text-2xl font-extrabold tracking-tight flex items-center gap-2 mt-1">
+                    <i class="fas fa-hand-holding-heart text-emerald-400 animate-pulse"></i> KAS SOSMA
+                </h1>
+                <p class="text-xs text-teal-100 mt-1 font-medium">Sistem Keuangan Sosial & Solidaritas Masyarakat | Sekretaris & Bendahara</p>
+            </div>
+            
+            <!-- Navigasi Utama -->
+            <div class="flex bg-white/10 backdrop-blur-md p-1 rounded-xl border border-white/20">
+                <button onclick="switchTab('warga')" id="navWarga" class="px-4 py-2 rounded-lg text-sm font-semibold transition bg-white text-teal-950 shadow">
+                    <i class="fas fa-chart-line mr-1"></i> Dashboard Sosial
+                </button>
+                <button onclick="switchTab('admin')" id="navAdmin" class="px-4 py-2 rounded-lg text-sm font-semibold transition text-white hover:bg-white/10">
+                    <i class="fas fa-user-shield mr-1"></i> Panel Bendahara
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 mt-6">
+
+        <!-- ================= HALAMAN DASHBOARD SOSIAL (PUBLIC) ================= -->
+        <div id="tabWarga" class="space-y-6">
+            
+            <!-- CATATAN SEKRETARIS & BENDAHARA -->
+            <div class="bg-teal-50 border-l-4 border-teal-600 p-5 rounded-r-xl shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="flex gap-3">
+                    <div class="text-teal-600 text-xl"><i class="fas fa-info-circle"></i></div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-teal-900 text-base">Info & Catatan Pengurus</h3>
+                        <p id="viewPengumuman" class="text-teal-800 text-sm mt-1 whitespace-pre-line">Loading info pengumuman...</p>
+                    </div>
+                </div>
+                <button onclick="openModalBayar()" class="shrink-0 w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-md transition flex items-center justify-center gap-2">
+                    <i class="fas fa-qrcode"></i> Salurkan Iuran / Donasi
+                </button>
+            </div>
+
+            <!-- CARD INFORMASI UTAMA -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Info Saldo Bersih -->
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Sisa Saldo Kas Aktif</span>
+                        <h2 id="viewTotalKas" class="text-3xl font-black text-emerald-600 mt-1">Rp 0</h2>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-4 border-t pt-2 border-slate-100 space-y-0.5" id="hitungDetilKas">
+                        <!-- Diisi otomatis oleh JS -->
+                    </div>
+                </div>
+
+                <!-- Info Periode -->
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Periode Berjalan</span>
+                        <h2 id="viewPeriode" class="text-2xl font-black text-teal-600 mt-1">Bulan 2026</h2>
+                        <p class="text-xs text-slate-500 mt-1" id="textIuranWajib">Iuran Wajib: Rp 10.000</p>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-4 border-t pt-2 border-slate-100">
+                        Keuangan dikelola secara berkala, terbuka, dan dipertanggungjawabkan.
+                    </div>
+                </div>
+
+                <!-- Info Partisipasi -->
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Partisipasi Pembayaran Anggota</span>
+                        <div class="flex items-center gap-2 mt-2">
+                            <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                                <div id="progressBayar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                            <span id="textProgress" class="text-sm font-bold text-slate-600">0%</span>
+                        </div>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-4 border-t pt-2 border-slate-100 flex justify-between">
+                        <span id="statsLunas" class="font-semibold text-emerald-600">Lunas: 0</span>
+                        <span id="statsBelum" class="font-semibold text-rose-500">Belum: 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRID TABEL UTAMA & RIWAYAT -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- KIRI: TABEL TRANSPARANSI ANGGOTA (7/12) -->
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden lg:col-span-7">
+                    <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-lg">Daftar Status Iuran Anggota</h3>
+                            <p class="text-xs text-slate-400 mt-1">Rekapan iuran wajib per anggota bulan berjalan.</p>
+                        </div>
+                        <input type="text" id="cariAnggota" placeholder="Cari nama anggota..." oninput="filterTabelAnggota()" class="text-xs border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-teal-500 w-full sm:w-auto">
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-500 font-bold text-xs tracking-wider border-b border-slate-100">
+                                    <th class="p-4 pl-6">Nama Anggota</th>
+                                    <th class="p-4 text-center">Iuran Bulanan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelAnggotaBody" class="divide-y divide-slate-100 text-sm">
+                                <!-- Diisi oleh JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- KANAN: BUKU ARUS KAS (5/12) -->
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden lg:col-span-5 flex flex-col">
+                    <div class="p-5 border-b border-slate-100 flex flex-col gap-3">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-bold text-slate-800 text-lg">Buku Arus Kas SOSMA</h3>
+                            <button onclick="eksporKeExcel()" class="bg-teal-50 text-teal-700 hover:bg-teal-100 px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                                <i class="fas fa-file-excel"></i> Ekspor CSV
+                            </button>
+                        </div>
+                        
+                        <!-- Filter Pencarian Transaksi -->
+                        <div class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-lg">
+                            <button onclick="setFilterTransaksi('semua')" id="filterAll" class="text-[10px] font-bold py-1 px-2 rounded-md bg-white text-slate-800 shadow-sm transition">Semua</button>
+                            <button onclick="setFilterTransaksi('masuk')" id="filterIn" class="text-[10px] font-bold py-1 px-2 rounded-md text-slate-500 transition">Masuk</button>
+                            <button onclick="setFilterTransaksi('keluar')" id="filterOut" class="text-[10px] font-bold py-1 px-2 rounded-md text-slate-500 transition">Keluar</button>
+                        </div>
+                    </div>
+                    <div class="divide-y divide-slate-100 max-h-[420px] overflow-y-auto flex-1" id="listRiwayatKas">
+                        <!-- Diisi oleh JS -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= HALAMAN KONTROL PANEL (ADMIN) ================= -->
+        <div id="tabAdmin" class="hidden">
+            
+            <!-- FORM LOGIN ADMIN -->
+            <div id="loginSection" class="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 max-w-md mx-auto text-center transition-all">
+                <div class="w-16 h-16 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-shield-halved text-teal-600 text-2xl"></i>
+                </div>
+                <h3 class="font-bold text-slate-800 text-xl">Masuk Akses Bendahara</h3>
+                <p class="text-slate-400 text-xs mt-1 mb-6">Gunakan kode otorisasi untuk melakukan perubahan data keuangan.</p>
+                
+                <div id="passWrapper" class="relative rounded-xl overflow-hidden transition-all duration-200 mb-4">
+                    <input type="password" id="passInput" placeholder="Password Pengurus" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-center focus:ring-2 focus:ring-teal-500 focus:outline-none tracking-widest font-bold bg-slate-50">
+                </div>
+                <button onclick="verifikasiAdmin()" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 rounded-xl transition shadow-md shadow-teal-200">
+                    Buka Akses Pengurus
+                </button>
+            </div>
+
+            <!-- KONTEN CONTROL PANEL ADMIN (TERPROTEKSI) -->
+            <div id="adminPanelSection" class="hidden space-y-6">
+                
+                <div class="bg-slate-800 text-white p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <span class="text-xs bg-teal-500 text-white font-bold px-2.5 py-1 rounded-md uppercase">Otorisasi Pengurus KAS SOSMA</span>
+                        <h2 class="text-lg font-bold mt-1.5">Halo Bendahara & Sekretaris Sosma!</h2>
+                    </div>
+                    <button onclick="keluarAdmin()" class="bg-red-500 hover:bg-red-600 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
+                        <i class="fas fa-sign-out-alt mr-1"></i> Keluar Sistem
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- KIRI: KONFIGURASI UMUM & INFO TRANSFER -->
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
+                        <h3 class="font-bold text-slate-800 border-b pb-2"><i class="fas fa-sliders-h text-teal-500 mr-2"></i>Konfigurasi Utama</h3>
+                        
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="col-span-2">
+                                <label class="block text-xs font-bold text-slate-400 uppercase">Bulan Periode</label>
+                                <select id="setBulan" onchange="simpanConfigDasar()" class="w-full mt-1 border border-slate-200 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                                    <option value="Januari">Januari</option>
+                                    <option value="Februari">Februari</option>
+                                    <option value="Maret">Maret</option>
+                                    <option value="April">April</option>
+                                    <option value="Mei">Mei</option>
+                                    <option value="Juni">Juni</option>
+                                    <option value="Juli">Juli</option>
+                                    <option value="Agustus">Agustus</option>
+                                    <option value="September">September</option>
+                                    <option value="Oktober">Oktober</option>
+                                    <option value="November">November</option>
+                                    <option value="Desember">Desember</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase">Tahun</label>
+                                <input type="number" id="setTahun" oninput="simpanConfigDasar()" class="w-full mt-1 border border-slate-200 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase">Iuran Bulanan (Rp)</label>
+                                <input type="number" id="setIuran" oninput="simpanConfigDasar()" class="w-full mt-1 border border-slate-200 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 font-bold text-emerald-600">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase">Kas Sisa Bulan Lalu (Rp)</label>
+                                <input type="number" id="setKasSebelumnya" oninput="simpanConfigDasar()" class="w-full mt-1 border border-slate-200 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 font-bold text-slate-700">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase">Metode Transfer GoPay</label>
+                            <input type="text" id="setGopay" oninput="simpanMetodeBayar()" class="w-full mt-1 border border-slate-200 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase">Link URL QRIS Pembayaran (Gambar)</label>
+                            <input type="text" id="setQrisUrl" oninput="simpanMetodeBayar()" placeholder="Masukkan link gambar QRIS Anda" class="w-full mt-1 border border-slate-200 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-xs">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase">Catatan & Pengumuman Pembayaran</label>
+                            <textarea id="setPengumuman" rows="3" class="w-full mt-1 border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Tulis batas waktu pembayaran atau agenda..."></textarea>
+                            <button onclick="simpanCatatan()" class="mt-2 w-full bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold py-2 rounded-lg transition">
+                                Perbarui Pengumuman
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- KANAN: INPUT MANUAL TRANSAKSI DENGAN FITUR TANGGAL & KATEGORI -->
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col justify-between gap-4">
+                        <div class="space-y-4">
+                            <h3 class="font-bold text-slate-800 border-b pb-2"><i class="fas fa-exchange-alt text-teal-500 mr-2"></i>Catat Transaksi Buku Kas Baru</h3>
+                            
+                            <!-- Pilih Tanggal Transaksi -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase">Tanggal Transaksi</label>
+                                <input type="date" id="transTanggal" class="w-full mt-1 border border-slate-200 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 uppercase">Jenis Transaksi</label>
+                                    <select id="transTipe" class="w-full mt-1 border border-slate-200 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                                        <option value="keluar">Pengeluaran (-)</option>
+                                        <option value="masuk">Pemasukan Lain (+)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 uppercase">Kategori</label>
+                                    <select id="transKategori" class="w-full mt-1 border border-slate-200 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                                        <option value="Iuran Anggota">Iuran Anggota</option>
+                                        <option value="Santunan / Bantuan">Santunan / Bantuan</option>
+                                        <option value="Kegiatan Sosial">Kegiatan Sosial</option>
+                                        <option value="Kas Operasional">Kas Operasional</option>
+                                        <option value="Lain-lain">Lain-lain</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 uppercase">Nominal (Rp)</label>
+                                    <input type="number" id="transNominal" placeholder="Misal: 15000" class="w-full mt-1 border border-slate-200 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase">Keterangan Penggunaan Kas</label>
+                                <input type="text" id="transKet" placeholder="Misal: Santunan Duka untuk Keluarga Anggota" class="w-full mt-1 border border-slate-200 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                            </div>
+
+                            <button onclick="tambahTransaksiManual()" class="w-full bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold py-2.5 rounded-lg transition">
+                                <i class="fas fa-plus mr-1"></i> Masukkan ke Buku Kas
+                            </button>
+                        </div>
+
+                        <!-- Reset Data -->
+                        <div class="bg-rose-50 p-4 rounded-xl border border-rose-100">
+                            <h4 class="text-xs font-bold text-rose-800 uppercase">Reset Buku Kas & Periode Baru</h4>
+                            <p class="text-[11px] text-rose-500 mt-0.5">Sangat disarankan mencatat saldo akhir bulan ini terlebih dahulu untuk diinput kembali sebagai 'Kas Sisa Bulan Lalu' di periode mendatang.</p>
+                            <button onclick="resetSemuaStatus()" class="mt-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">
+                                Bersihkan Riwayat Kas & Status Bayar
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- DAFTAR LOG TRANSAKSI UTK DIHAPUS (BARU) -->
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div class="p-5 border-b border-slate-100">
+                        <h3 class="font-bold text-slate-800 text-lg">Kelola Riwayat Transaksi Buku Kas</h3>
+                        <p class="text-xs text-slate-400 mt-1">Anda dapat membatalkan atau menghapus transaksi jika salah melakukan penginputan.</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-500 font-bold text-xs border-b">
+                                    <th class="p-4 pl-6">Tanggal</th>
+                                    <th class="p-4">Keterangan / Kategori</th>
+                                    <th class="p-4 text-center">Tipe</th>
+                                    <th class="p-4 text-right">Nominal</th>
+                                    <th class="p-4 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelAdminTransaksiBody" class="divide-y divide-slate-100">
+                                <!-- Diisi otomatis oleh JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- EDIT TABEL DATA WARGA -->
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-lg">Input Pembayaran Anggota</h3>
+                            <p class="text-xs text-slate-400 mt-1">Cukup berikan tanda centang, sistem akan langsung mengkalkulasi dan menyimpan perubahan otomatis.</p>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold text-xs tracking-wider">
+                                    <th class="p-4 pl-6">Nama Anggota</th>
+                                    <th class="p-4 text-center">Sudah Melunasi Iuran?</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelAdminBody" class="divide-y divide-slate-100 text-sm">
+                                <!-- Diisi oleh JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- MODAL PEMBAYARAN QRIS -->
+    <div id="modalBayar" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
+            <button onclick="closeModalBayar()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+            
+            <div class="text-center">
+                <h3 class="font-bold text-slate-800 text-lg">Metode Pembayaran Kas</h3>
+                <p class="text-xs text-slate-400 mt-1">Gunakan salah satu pilihan pembayaran di bawah ini</p>
+                
+                <!-- Box QRIS -->
+                <div class="mt-6 border border-slate-100 bg-slate-50 p-4 rounded-xl flex flex-col items-center">
+                    <span class="text-[10px] font-bold text-slate-400 tracking-wider uppercase mb-2">Pindai QRIS Resmi SOSMA</span>
+                    <div class="w-44 h-44 bg-slate-200 rounded-lg flex items-center justify-center overflow-hidden border border-slate-300">
+                        <img id="qrisImg" src="" alt="Scan QRIS Organisasi" onerror="this.src='https://placehold.co/200x200?text=Upload+QRIS+di+Admin'" class="object-contain w-full h-full">
+                    </div>
+                </div>
+
+                <!-- Box GoPay -->
+                <div class="mt-4 bg-teal-50 border border-teal-100 rounded-xl p-3 flex justify-between items-center text-left">
+                    <div>
+                        <span class="block text-[9px] font-bold text-teal-600 uppercase">Transfer GoPay Bendahara</span>
+                        <span id="gopayNum" class="text-sm font-extrabold text-teal-900">087718964929</span>
+                    </div>
+                    <button onclick="salinGopay()" class="bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg transition">
+                        <i class="fas fa-copy"></i> Salin
+                    </button>
+                </div>
+
+                <p class="text-[10px] text-slate-400 mt-5">Setelah transfer, harap langsung infokan atau kirim bukti transfer ke bendahara agar status lunas Anda diperbarui.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT SISTEM -->
+    <script>
+        // Data Master Anggota Sesuai Permintaan
+        const dataMasterOrganisasi = [
+            { nama: "Muhamad Herian Agustin", bayar: false },
+            { nama: "Muhammad Kayyis Zaki", bayar: false },
+            { nama: "Muhammad Rifqi Noorfadhilla", bayar: false },
+            { nama: "Sesilia Febrina Raya", bayar: false },
+            { nama: "Atika Mutia", bayar: false },
+            { nama: "Marsya Hasnalia Kusumawicitra", bayar: false },
+            { nama: "Dian Natasya Rusnadi", bayar: false },
+            { nama: "Atha Nafidar Amru", bayar: false },
+            { nama: "Bagus Tirta Firdaus", bayar: false },
+            { nama: "Wildan Ainurohman", bayar: false },
+            { nama: "Kristovorus Jansen Pere", bayar: false },
+            { nama: "Dimas Febriansyah", bayar: false },
+            { nama: "Fauzi Eka Firjatullah", bayar: false }
+        ];
+
+        // Memuat Data Keadaan dari LocalStorage atau Data Default
+        let dataAnggota = JSON.parse(localStorage.getItem('kasOrg_dataAnggota')) || dataMasterOrganisasi;
+        let pengumuman = localStorage.getItem('kasOrg_pengumuman') || "Halo teman-teman pengurus SOSMA!\nHarap melunasi iuran bulanan tepat waktu agar pelaksanaan agenda sosial kita berjalan lancar tanpa hambatan keuangan.";
+        
+        let kasSebelumnya = parseInt(localStorage.getItem('kasOrg_kasSebelumnya')) || 0;
+        let nominalIuran = parseInt(localStorage.getItem('kasOrg_nominalIuran')) || 10000;
+        let configBulan = localStorage.getItem('kasOrg_bulan') || "Juni";
+        let configTahun = localStorage.getItem('kasOrg_tahun') || "2026";
+        
+        let gopayNumber = localStorage.getItem('kasOrg_gopay') || "087718964929";
+        let qrisUrl = localStorage.getItem('kasOrg_qris') || "";
+        
+        // Riwayat Arus Kas Buku Masuk/Keluar
+        let riwayatKas = JSON.parse(localStorage.getItem('kasOrg_riwayat')) || [];
+        let filterStatus = 'semua'; // 'semua' | 'masuk' | 'keluar'
+
+        let loginSessionActive = false;
+
+        function initApp() {
+            document.getElementById('setBulan').value = configBulan;
+            document.getElementById('setTahun').value = configTahun;
+            document.getElementById('setIuran').value = nominalIuran;
+            document.getElementById('setKasSebelumnya').value = kasSebelumnya;
+            document.getElementById('setPengumuman').value = pengumuman;
+            document.getElementById('setGopay').value = gopayNumber;
+            document.getElementById('setQrisUrl').value = qrisUrl;
+            
+            // Set Tanggal Transaksi Otomatis ke hari ini
+            const hariIni = new Date().toISOString().split('T')[0];
+            document.getElementById('transTanggal').value = hariIni;
+
+            renderDashboard();
+            renderAdminPanel();
+        }
+
+        // Kalkulasi & Rendering Utama Laporan Transparansi
+        function renderDashboard() {
+            document.getElementById('viewPengumuman').innerText = pengumuman;
+            document.getElementById('viewPeriode').innerText = `${configBulan} ${configTahun}`;
+            document.getElementById('textIuranWajib').innerText = `Iuran Wajib: ${formatKeuangan(nominalIuran)}`;
+
+            // Hitung Pembayaran Iuran
+            let anggotaLunas = 0;
+            dataAnggota.forEach(a => { if (a.bayar) anggotaLunas++; });
+            let totalIuranMasuk = anggotaLunas * nominalIuran;
+
+            // Hitung Transaksi Buku Kas Manual
+            let totalPemasukanLain = 0;
+            let totalPengeluaran = 0;
+
+            riwayatKas.forEach(item => {
+                if (item.tipe === 'masuk') {
+                    totalPemasukanLain += item.nominal;
+                } else if (item.tipe === 'keluar') {
+                    totalPengeluaran += item.nominal;
+                }
+            });
+
+            // Rumus Saldo Total Kas Bersih SOSMA
+            let totalKasBersih = kasSebelumnya + totalIuranMasuk + totalPemasukanLain - totalPengeluaran;
+
+            // Tampilkan Sisa Saldo
+            document.getElementById('viewTotalKas').innerText = formatKeuangan(totalKasBersih);
+
+            // Breakdown Detail Transparansi Keuangan
+            document.getElementById('hitungDetilKas').innerHTML = `
+                <div>• Kas Sisa Lalu: <span class="font-semibold text-slate-700">${formatKeuangan(kasSebelumnya)}</span></div>
+                <div>• Iuran Masuk (+): <span class="font-semibold text-emerald-600">${formatKeuangan(totalIuranMasuk)}</span></div>
+                <div>• Pemasukan Lain (+): <span class="font-semibold text-emerald-600">${formatKeuangan(totalPemasukanLain)}</span></div>
+                <div>• Pengeluaran Kas (-): <span class="font-semibold text-rose-600">${formatKeuangan(totalPengeluaran)}</span></div>
+            `;
+
+            // Progress Bar Pembayaran
+            let persentase = Math.round((anggotaLunas / dataAnggota.length) * 100);
+            document.getElementById('progressBayar').style.width = `${persentase}%`;
+            document.getElementById('textProgress').innerText = `${persentase}%`;
+            document.getElementById('statsLunas').innerText = `Lunas: ${anggotaLunas}`;
+            document.getElementById('statsBelum').innerText = `Belum: ${dataAnggota.length - anggotaLunas}`;
+
+            // Build Elemen Dinamis
+            buildTabelAnggotaPublic();
+            buildRiwayatKasPublic();
+        }
+
+        // Membangun Tabel Anggota untuk Sisi Publik
+        function buildTabelAnggotaPublic() {
+            let html = '';
+            dataAnggota.forEach(anggota => {
+                html += `
+                    <tr class="hover:bg-slate-50/50 transition border-b border-slate-100">
+                        <td class="p-4 pl-6 font-semibold text-slate-700">${anggota.nama}</td>
+                        <td class="p-4 text-center">
+                            ${anggota.bayar ? 
+                                `<span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-bold"><i class="fas fa-check-circle"></i> Lunas (${formatKeuangan(nominalIuran)})</span>` : 
+                                '<span class="inline-flex items-center gap-1 bg-rose-50 text-rose-600 border border-rose-100 px-3 py-1 rounded-full text-xs font-bold"><i class="fas fa-times-circle"></i> Belum Bayar</span>'}
+                        </td>
+                    </tr>
+                `;
+            });
+            document.getElementById('tabelAnggotaBody').innerHTML = html;
+        }
+
+        // Membangun Buku Riwayat Kas Keluar Masuk Publik dengan Fitur Filter
+        function buildRiwayatKasPublic() {
+            let html = '';
+            
+            // Lakukan Filter Data Terlebih dahulu
+            let dataTerfilter = riwayatKas;
+            if (filterStatus === 'masuk') {
+                dataTerfilter = riwayatKas.filter(item => item.tipe === 'masuk');
+            } else if (filterStatus === 'keluar') {
+                dataTerfilter = riwayatKas.filter(item => item.tipe === 'keluar');
+            }
+
+            if (dataTerfilter.length === 0) {
+                html = `
+                    <div class="p-8 text-center text-slate-400 text-xs">
+                        <i class="fas fa-receipt text-3xl mb-2 text-slate-300"></i><br>Belum ada riwayat transaksi dengan kriteria ini.
+                    </div>
+                `;
+            } else {
+                // Tampilkan riwayat terbaru di atas
+                [...dataTerfilter].reverse().forEach((item) => {
+                    const isMasuk = item.tipe === 'masuk';
+                    const kategClass = isMasuk ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100';
+                    html += `
+                        <div class="p-4 flex justify-between items-center hover:bg-slate-50/50 transition">
+                            <div class="pr-3">
+                                <span class="text-[9px] font-bold px-2 py-0.5 rounded border ${kategClass}">${item.kategori || 'Kas SOSMA'}</span>
+                                <p class="text-[10px] text-slate-400 mt-1">${formatTanggalTampilan(item.tanggal)}</p>
+                                <p class="text-sm font-semibold text-slate-700 mt-0.5">${item.keterangan}</p>
+                            </div>
+                            <span class="text-sm font-bold shrink-0 ${isMasuk ? 'text-emerald-600' : 'text-rose-500'}">
+                                ${isMasuk ? '+' : '-'} ${formatKeuangan(item.nominal)}
+                            </span>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('listRiwayatKas').innerHTML = html;
+        }
+
+        // Set Filter Tipe Transaksi
+        function setFilterTransaksi(tipe) {
+            filterStatus = tipe;
+            document.getElementById('filterAll').className = "text-[10px] font-bold py-1 px-2 rounded-md " + (tipe === 'semua' ? "bg-white text-slate-800 shadow-sm" : "text-slate-500");
+            document.getElementById('filterIn').className = "text-[10px] font-bold py-1 px-2 rounded-md " + (tipe === 'masuk' ? "bg-white text-slate-800 shadow-sm" : "text-slate-500");
+            document.getElementById('filterOut').className = "text-[10px] font-bold py-1 px-2 rounded-md " + (tipe === 'keluar' ? "bg-white text-slate-800 shadow-sm" : "text-slate-500");
+            buildRiwayatKasPublic();
+        }
+
+        // Pencarian Nama Anggota
+        function filterTabelAnggota() {
+            let input = document.getElementById('cariAnggota').value.toLowerCase();
+            let rows = document.querySelectorAll('#tabelAnggotaBody tr');
+
+            rows.forEach(row => {
+                let nama = row.querySelector('td:first-child').innerText.toLowerCase();
+                if (nama.includes(input)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        }
+
+        // Render untuk Sisi Input Bendahara (Admin)
+        function renderAdminPanel() {
+            let html = '';
+            dataAnggota.forEach((anggota, index) => {
+                html += `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                        <td class="p-4 pl-6 font-medium text-slate-800">${anggota.nama}</td>
+                        <td class="p-4 text-center">
+                            <input type="checkbox" ${anggota.bayar ? 'checked' : ''} onchange="updateBayarAnggota(${index})" class="w-5 h-5 rounded text-teal-600 border-slate-300 focus:ring-teal-500">
+                        </td>
+                    </tr>
+                `;
+            });
+            document.getElementById('tabelAdminBody').innerHTML = html;
+
+            renderAdminDaftarTransaksi();
+        }
+
+        // Membangun Tabel Log Transaksi di Sisi Admin untuk Dihapus (BARU)
+        function renderAdminDaftarTransaksi() {
+            let html = '';
+            if (riwayatKas.length === 0) {
+                html = `
+                    <tr>
+                        <td colspan="5" class="p-6 text-center text-slate-400 text-xs">Belum ada transaksi terekam.</td>
+                    </tr>
+                `;
+            } else {
+                [...riwayatKas].reverse().forEach((item) => {
+                    const isMasuk = item.tipe === 'masuk';
+                    html += `
+                        <tr class="hover:bg-slate-50 text-slate-700">
+                            <td class="p-4 pl-6 text-xs text-slate-400 whitespace-nowrap">${formatTanggalTampilan(item.tanggal)}</td>
+                            <td class="p-4">
+                                <span class="text-[9px] block text-slate-400 font-bold uppercase">${item.kategori || 'KAS'}</span>
+                                <span class="font-medium text-slate-800">${item.keterangan}</span>
+                            </td>
+                            <td class="p-4 text-center">
+                                ${isMasuk ? '<span class="bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full text-[10px] font-bold">MASUK</span>' : '<span class="bg-rose-50 text-rose-700 px-2.5 py-0.5 rounded-full text-[10px] font-bold">KELUAR</span>'}
+                            </td>
+                            <td class="p-4 text-right font-semibold text-slate-800">
+                                ${isMasuk ? '+' : '-'} ${formatKeuangan(item.nominal)}
+                            </td>
+                            <td class="p-4 text-center">
+                                <button onclick="hapusTransaksi(${item.id})" class="text-rose-500 hover:text-rose-700 p-2 text-xs transition-colors" title="Hapus Transaksi">
+                                    <i class="fas fa-trash-alt"></i> Hapus
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            document.getElementById('tabelAdminTransaksiBody').innerHTML = html;
+        }
+
+        // Update Pembayaran via Checklist
+        function updateBayarAnggota(index) {
+            dataAnggota[index].bayar = !dataAnggota[index].bayar;
+            simpanState();
+            renderDashboard();
+        }
+
+        // Simpan Konfigurasi Dasar
+        function simpanConfigDasar() {
+            configBulan = document.getElementById('setBulan').value;
+            configTahun = document.getElementById('setTahun').value || "2026";
+            nominalIuran = parseInt(document.getElementById('setIuran').value) || 0;
+            kasSebelumnya = parseInt(document.getElementById('setKasSebelumnya').value) || 0;
+
+            localStorage.setItem('kasOrg_bulan', configBulan);
+            localStorage.setItem('kasOrg_tahun', configTahun);
+            localStorage.setItem('kasOrg_nominalIuran', nominalIuran);
+            localStorage.setItem('kasOrg_kasSebelumnya', kasSebelumnya);
+
+            renderDashboard();
+        }
+
+        // Simpan Metode Transfer & QRIS
+        function simpanMetodeBayar() {
+            gopayNumber = document.getElementById('setGopay').value;
+            qrisUrl = document.getElementById('setQrisUrl').value;
+
+            localStorage.setItem('kasOrg_gopay', gopayNumber);
+            localStorage.setItem('kasOrg_qris', qrisUrl);
+        }
+
+        // Simpan Pengumuman / Catatan dari Admin
+        function simpanCatatan() {
+            pengumuman = document.getElementById('setPengumuman').value;
+            localStorage.setItem('kasOrg_pengumuman', pengumuman);
+            renderDashboard();
+            alert("Pengumuman berhasil diperbarui!");
+        }
+
+        // Tambah Transaksi Manual ke Buku Kas
+        function tambahTransaksiManual() {
+            const tipe = document.getElementById('transTipe').value;
+            const kategori = document.getElementById('transKategori').value;
+            const nominal = parseInt(document.getElementById('transNominal').value) || 0;
+            const keterangan = document.getElementById('transKet').value.trim();
+            const setTanggal = document.getElementById('transTanggal').value; // Tanggal Kustom
+
+            if (nominal <= 0 || keterangan === '') {
+                alert("Nominal dan keterangan tidak boleh kosong!");
+                return;
+            }
+
+            const transaksiBaru = {
+                id: Date.now(),
+                tanggal: setTanggal || new Date().toISOString().split('T')[0],
+                tipe: tipe,
+                kategori: kategori,
+                nominal: nominal,
+                keterangan: keterangan
+            };
+
+            riwayatKas.push(transaksiBaru);
+            localStorage.setItem('kasOrg_riwayat', JSON.stringify(riwayatKas));
+
+            // Reset input form
+            document.getElementById('transNominal').value = '';
+            document.getElementById('transKet').value = '';
+
+            renderDashboard();
+            renderAdminPanel();
+            alert("Transaksi baru sukses dimasukkan ke Buku Kas!");
+        }
+
+        // Hapus Transaksi Buku Kas Manual Berdasarkan ID (BARU)
+        function hapusTransaksi(id) {
+            if (confirm("Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini akan memengaruhi total kas.")) {
+                riwayatKas = riwayatKas.filter(item => item.id !== id);
+                localStorage.setItem('kasOrg_riwayat', JSON.stringify(riwayatKas));
+                
+                renderDashboard();
+                renderAdminPanel();
+                alert("Transaksi berhasil dihapus dari pembukuan.");
+            }
+        }
+
+        // Ekspor Buku Kas SOSMA ke Excel (Format CSV) (BARU)
+        function eksporKeExcel() {
+            if (riwayatKas.length === 0) {
+                alert("Belum ada riwayat transaksi untuk diekspor!");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Tanggal,Kategori,Keterangan,Tipe,Nominal\r\n";
+
+            riwayatKas.forEach(item => {
+                let formattedTanggal = item.tanggal;
+                let formattedKet = item.keterangan.replace(/,/g, " "); // Cegah koma merusak kolom
+                let tipeStatus = item.tipe === 'masuk' ? "Pemasukan" : "Pengeluaran";
+                csvContent += `${formattedTanggal},${item.kategori || 'SOSMA'},${formattedKet},${tipeStatus},${item.nominal}\r\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Laporan_KAS_SOSMA_${configBulan}_${configTahun}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Reset Total Pembukuan & Status untuk Periode Baru
+        function resetSemuaStatus() {
+            if (confirm("Apakah Anda yakin ingin membersihkan seluruh riwayat kas dan status iuran? Tindakan ini tidak dapat dibatalkan.")) {
+                dataAnggota.forEach(a => { a.bayar = false; });
+                riwayatKas = [];
+                kasSebelumnya = 0;
+                
+                localStorage.setItem('kasOrg_kasSebelumnya', 0);
+                document.getElementById('setKasSebelumnya').value = 0;
+                
+                localStorage.removeItem('kasOrg_riwayat');
+                simpanState();
+
+                renderDashboard();
+                renderAdminPanel();
+                alert("Semua iuran bulanan dan buku kas berhasil dibersihkan!");
+            }
+        }
+
+        // Penyimpanan Database LocalStorage
+        function simpanState() {
+            localStorage.setItem('kasOrg_dataAnggota', JSON.stringify(dataAnggota));
+        }
+
+        // Format Keuangan Rupiah
+        function formatKeuangan(angka) {
+            if (angka < 0) {
+                return "-Rp " + Math.abs(angka).toLocaleString('id-ID');
+            }
+            return "Rp " + angka.toLocaleString('id-ID');
+        }
+
+        // Format Tampilan Tanggal YYYY-MM-DD ke format lokal Indonesia
+        function formatTanggalTampilan(strTanggal) {
+            if (!strTanggal) return "-";
+            const parts = strTanggal.split('-');
+            if (parts.length !== 3) return strTanggal;
+            
+            const bulanMap = {
+                '01': 'Jan', '02': 'Feb', '03': 'Mar', '04': 'Apr', '05': 'Mei', '06': 'Jun',
+                '07': 'Jul', '08': 'Agt', '09': 'Sep', '10': 'Okt', '11': 'Nov', '12': 'Des'
+            };
+
+            return `${parts[2]} ${bulanMap[parts[1]]} ${parts[0]}`;
+        }
+
+        // Navigasi Tab Halaman
+        function switchTab(tabId) {
+            const btnWarga = document.getElementById('navWarga');
+            const btnAdmin = document.getElementById('navAdmin');
+            const pnlWarga = document.getElementById('tabWarga');
+            const pnlAdmin = document.getElementById('tabAdmin');
+
+            if (tabId === 'warga') {
+                pnlWarga.classList.remove('hidden');
+                pnlAdmin.classList.add('hidden');
+                btnWarga.className = "px-4 py-2 rounded-lg text-sm font-semibold transition bg-white text-teal-950 shadow";
+                btnAdmin.className = "px-4 py-2 rounded-lg text-sm font-semibold transition text-white hover:bg-white/10";
+            } else {
+                pnlWarga.classList.add('hidden');
+                pnlAdmin.classList.remove('hidden');
+                btnAdmin.className = "px-4 py-2 rounded-lg text-sm font-semibold transition bg-white text-teal-950 shadow";
+                btnWarga.className = "px-4 py-2 rounded-lg text-sm font-semibold transition text-white hover:bg-white/10";
+                checkLoginStatus();
+            }
+        }
+
+        // Autentikasi Keamanan & Animasi Getar (Shake)
+        function verifikasiAdmin() {
+            const input = document.getElementById('passInput').value;
+            const wrapper = document.getElementById('passWrapper');
+
+            if (input === '12344321') {
+                loginSessionActive = true;
+                wrapper.classList.remove('animate-shake'); 
+                checkLoginStatus();
+            } else {
+                wrapper.classList.remove('animate-shake');
+                void wrapper.offsetWidth; // Trigger reflow untuk mengulang CSS animation
+                wrapper.classList.add('animate-shake');
+                document.getElementById('passInput').value = '';
+            }
+        }
+
+        function keluarAdmin() {
+            loginSessionActive = false;
+            document.getElementById('passInput').value = '';
+            checkLoginStatus();
+        }
+
+        function checkLoginStatus() {
+            const loginBox = document.getElementById('loginSection');
+            const controlBox = document.getElementById('adminPanelSection');
+
+            if (loginSessionActive) {
+                loginBox.classList.add('hidden');
+                controlBox.classList.remove('hidden');
+            } else {
+                loginBox.classList.remove('hidden');
+                controlBox.classList.add('hidden');
+            }
+        }
+
+        // Fungsi Modal Instruksi Pembayaran QRIS / GoPay
+        function openModalBayar() {
+            document.getElementById('gopayNum').innerText = gopayNumber;
+            document.getElementById('qrisImg').src = qrisUrl;
+            document.getElementById('modalBayar').classList.remove('hidden');
+        }
+
+        function closeModalBayar() {
+            document.getElementById('modalBayar').classList.add('hidden');
+        }
+
+        function salinGopay() {
+            const tempInput = document.createElement("input");
+            tempInput.value = gopayNumber;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy"); // Fallback kompatibilitas iFrame
+            document.body.removeChild(tempInput);
+            alert("Nomor GoPay Bendahara berhasil disalin ke papan klip!");
+        }
+
+        // Inisialisasi Aplikasi Saat Membuka Halaman
+        initApp();
+    </script>
+</body>
+</html>
