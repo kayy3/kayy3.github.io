@@ -7,6 +7,10 @@
     <!-- Tailwind CSS & FontAwesome Icons -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase Compat SDKs (Dipakai untuk real-time database sync) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    
     <style>
         /* Animasi Getar untuk Password Salah */
         @keyframes shake {
@@ -34,14 +38,21 @@
                 <p class="text-xs text-teal-100 mt-1 font-medium">Sistem Keuangan Sosial & Solidaritas Masyarakat | Sekretaris & Bendahara</p>
             </div>
             
-            <!-- Navigasi Utama -->
-            <div class="flex bg-white/10 backdrop-blur-md p-1 rounded-xl border border-white/20">
-                <button onclick="switchTab('warga')" id="navWarga" class="px-4 py-2 rounded-lg text-sm font-semibold transition bg-white text-teal-950 shadow">
-                    <i class="fas fa-chart-line mr-1"></i> Dashboard Sosial
-                </button>
-                <button onclick="switchTab('admin')" id="navAdmin" class="px-4 py-2 rounded-lg text-sm font-semibold transition text-white hover:bg-white/10">
-                    <i class="fas fa-user-shield mr-1"></i> Panel Bendahara
-                </button>
+            <!-- Indikator Cloud Database -->
+            <div class="flex items-center gap-3">
+                <div id="cloudStatusBadge" class="text-[10px] px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5 bg-slate-700/50 text-slate-300 border border-slate-600">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse"></span> Offline / Lokal
+                </div>
+                
+                <!-- Navigasi Utama -->
+                <div class="flex bg-white/10 backdrop-blur-md p-1 rounded-xl border border-white/20 text-xs">
+                    <button onclick="switchTab('warga')" id="navWarga" class="px-4 py-2 rounded-lg font-semibold transition bg-white text-teal-950 shadow">
+                        <i class="fas fa-chart-line mr-1"></i> Dashboard Sosial
+                    </button>
+                    <button onclick="switchTab('admin')" id="navAdmin" class="px-4 py-2 rounded-lg font-semibold transition text-white hover:bg-white/10">
+                        <i class="fas fa-user-shield mr-1"></i> Panel Bendahara
+                    </button>
+                </div>
             </div>
         </div>
     </header>
@@ -191,6 +202,44 @@
                     </button>
                 </div>
 
+                <!-- SEKSI SINKRONISASI CLOUD FIREBASE (SUDAH TERPASANG DEFAULT CONFIG) -->
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                    <h3 class="font-bold text-slate-800 border-b pb-2 flex items-center gap-2">
+                        <i class="fas fa-cloud text-teal-600"></i> 🌐 Koneksi Cloud (Firebase Sync)
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-1">Sistem ini sudah menggunakan database cloud pribadi Anda sebagai konfigurasi utama agar HP Anda dan semua HP anggota lainnya sinkron otomatis.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase">API Key</label>
+                            <input type="password" id="fbApiKey" placeholder="AIzaSy..." class="w-full mt-1 border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase">Project ID</label>
+                            <input type="text" id="fbProjectId" placeholder="kas-sosma-xxxx" class="w-full mt-1 border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase">Database URL</label>
+                            <input type="text" id="fbDbUrl" placeholder="https://kas-sosma-xxxx.asia-southeast1.firebasedatabase.app" class="w-full mt-1 border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase">App ID</label>
+                            <input type="text" id="fbAppId" placeholder="1:xxxx:web:xxxx" class="w-full mt-1 border border-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500">
+                        </div>
+                        <div class="flex items-end gap-2">
+                            <button onclick="simpanConfigFirebase()" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2 px-4 rounded-lg transition shadow">
+                                <i class="fas fa-link mr-1"></i> Ubah / Paksa Kustom
+                            </button>
+                            <button onclick="putusConfigFirebase()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold py-2 px-3 rounded-lg transition">
+                                Putuskan Cloud (Offline)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     
                     <!-- KIRI: KONFIGURASI UMUM & INFO TRANSFER -->
@@ -245,7 +294,7 @@
                         <div>
                             <label class="block text-xs font-bold text-slate-400 uppercase">Catatan & Pengumuman Pembayaran</label>
                             <textarea id="setPengumuman" rows="3" class="w-full mt-1 border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Tulis batas waktu pembayaran atau agenda..."></textarea>
-                            <button onclick="simpanCatatan()" class="mt-2 w-full bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold py-2 rounded-lg transition">
+                            <button onclick="simpanCatatan()" class="mt-2 w-full bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold py-2 rounded-lg transition shadow-md">
                                 Perbarui Pengumuman
                             </button>
                         </div>
@@ -294,16 +343,34 @@
                                 <input type="text" id="transKet" placeholder="Misal: Santunan Duka untuk Keluarga Anggota" class="w-full mt-1 border border-slate-200 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
                             </div>
 
-                            <button onclick="tambahTransaksiManual()" class="w-full bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold py-2.5 rounded-lg transition">
+                            <button onclick="tambahTransaksiManual()" class="w-full bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold py-2.5 rounded-lg transition font-bold shadow-md">
                                 <i class="fas fa-plus mr-1"></i> Masukkan ke Buku Kas
                             </button>
+                        </div>
+
+                        <!-- SINKRONISASI CADANGAN MANUAL (FALLBACK JIKA TANPA CLOUD) -->
+                        <div class="bg-teal-50 p-4 rounded-xl border border-teal-100">
+                            <h4 class="text-xs font-bold text-teal-800 uppercase flex items-center gap-1.5">
+                                <i class="fas fa-sync-alt"></i> Cadangan Data HP (Backup/Restore Manual)
+                            </h4>
+                            <p class="text-[10px] text-teal-600 mt-1">Bisa digunakan jika Anda menonaktifkan cloud atau dalam keadaan tanpa sinyal internet.</p>
+                            
+                            <div class="grid grid-cols-2 gap-2 mt-3">
+                                <button onclick="eksporDatabase()" class="bg-teal-600 hover:bg-teal-700 text-white text-[10px] font-bold py-2 px-1 rounded-lg transition flex items-center justify-center gap-1">
+                                    <i class="fas fa-file-export"></i> 1. Ekspor Data
+                                </button>
+                                <label class="bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-bold py-2 px-1 rounded-lg transition flex items-center justify-center gap-1 cursor-pointer text-center">
+                                    <i class="fas fa-file-import"></i> 2. Impor Data
+                                    <input type="file" id="importFile" onchange="imporDatabase(event)" class="hidden">
+                                </label>
+                            </div>
                         </div>
 
                         <!-- Reset Data -->
                         <div class="bg-rose-50 p-4 rounded-xl border border-rose-100">
                             <h4 class="text-xs font-bold text-rose-800 uppercase">Reset Buku Kas & Periode Baru</h4>
                             <p class="text-[11px] text-rose-500 mt-0.5">Sangat disarankan mencatat saldo akhir bulan ini terlebih dahulu untuk diinput kembali sebagai 'Kas Sisa Bulan Lalu' di periode mendatang.</p>
-                            <button onclick="resetSemuaStatus()" class="mt-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">
+                            <button onclick="mintaResetStatus()" class="mt-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">
                                 Bersihkan Riwayat Kas & Status Bayar
                             </button>
                         </div>
@@ -311,7 +378,7 @@
 
                 </div>
 
-                <!-- DAFTAR LOG TRANSAKSI UTK DIHAPUS (BARU) -->
+                <!-- DAFTAR LOG TRANSAKSI UTK DIHAPUS -->
                 <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                     <div class="p-5 border-b border-slate-100">
                         <h3 class="font-bold text-slate-800 text-lg">Kelola Riwayat Transaksi Buku Kas</h3>
@@ -399,6 +466,21 @@
         </div>
     </div>
 
+    <!-- MODAL DIALOG KONFIRMASI KUSTOM (Menggantikan confirm) -->
+    <div id="confirmModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+            <h3 class="font-bold text-slate-800 text-lg" id="confirmTitle">Konfirmasi</h3>
+            <p class="text-xs text-slate-400 mt-2" id="confirmMessage">Apakah Anda yakin ingin melanjutkan tindakan ini?</p>
+            <div class="flex justify-end gap-3 mt-6 text-xs font-semibold">
+                <button onclick="handleConfirmModalResponse(false)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg transition">Batal</button>
+                <button onclick="handleConfirmModalResponse(true)" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg transition">Ya, Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- WADAH TOAST NOTIFIKASI KUSTOM (Menggantikan alert) -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
     <!-- JAVASCRIPT SISTEM -->
     <script>
         // Data Master Anggota Sesuai Permintaan
@@ -435,6 +517,22 @@
         let filterStatus = 'semua'; // 'semua' | 'masuk' | 'keluar'
 
         let loginSessionActive = false;
+        
+        // Mesin Hubungan Cloud Firebase
+        let firebaseDB = null;
+        let isFirebaseActive = false;
+
+        // Kunci Default Konfigurasi Database Milik Anda yang Baru Saja Dibuat!
+        const defaultFirebaseConfig = {
+            apiKey: "AIzaSyAwuyVEkrkzInjVr64nIQ-TtkwY1T4stuc",
+            authDomain: "kas-sosma.firebaseapp.com",
+            databaseURL: "https://kas-sosma-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "kas-sosma",
+            storageBucket: "kas-sosma.firebasestorage.app",
+            messagingSenderId: "923846352147",
+            appId: "1:923846352147:web:1187ee21ccba785ad74ee6",
+            measurementId: "G-G4HCY7H849"
+        };
 
         function initApp() {
             document.getElementById('setBulan').value = configBulan;
@@ -449,8 +547,140 @@
             const hariIni = new Date().toISOString().split('T')[0];
             document.getElementById('transTanggal').value = hariIni;
 
+            // Membuka setup Firebase tersimpan
+            setupFirebaseConnection();
+
             renderDashboard();
             renderAdminPanel();
+        }
+
+        // Integrasi Firebase Realtime dengan fallback aman
+        function setupFirebaseConnection() {
+            let storedFB = JSON.parse(localStorage.getItem('kasOrg_fbConfig'));
+            
+            // Jika tidak ada config manual, dan user tidak sengaja memutuskannya, otomatis gunakan default milik Anda
+            if (!storedFB && localStorage.getItem('kasOrg_fbDisconnected') !== 'true') {
+                storedFB = defaultFirebaseConfig;
+                localStorage.setItem('kasOrg_fbConfig', JSON.stringify(storedFB));
+            }
+
+            if (storedFB && storedFB.apiKey && storedFB.databaseURL) {
+                // Tampilkan kredensial di Form Admin
+                document.getElementById('fbApiKey').value = storedFB.apiKey;
+                document.getElementById('fbProjectId').value = storedFB.projectId;
+                document.getElementById('fbDbUrl').value = storedFB.databaseURL;
+                document.getElementById('fbAppId').value = storedFB.appId;
+
+                try {
+                    if (!firebase.apps.length) {
+                        firebase.initializeApp(storedFB);
+                    }
+                    firebaseDB = firebase.database();
+                    isFirebaseActive = true;
+                    
+                    // Dengarkan database secara real-time dari cloud
+                    firebaseDB.ref('kas_sosma').on('value', (snapshot) => {
+                        const val = snapshot.val();
+                        if (val) {
+                            dataAnggota = val.dataAnggota || dataAnggota;
+                            riwayatKas = val.riwayatKas || riwayatKas;
+                            pengumuman = val.pengumuman || pengumuman;
+                            kasSebelumnya = val.kasSebelumnya || 0;
+                            nominalIuran = val.nominalIuran || 10000;
+                            configBulan = val.configBulan || "Juni";
+                            configTahun = val.configTahun || "2026";
+                            gopayNumber = val.gopayNumber || gopayNumber;
+                            qrisUrl = val.qrisUrl || qrisUrl;
+
+                            // Simpan cadangan lokal
+                            simpanState();
+
+                            // Sinkronkan input admin
+                            document.getElementById('setBulan').value = configBulan;
+                            document.getElementById('setTahun').value = configTahun;
+                            document.getElementById('setIuran').value = nominalIuran;
+                            document.getElementById('setKasSebelumnya').value = kasSebelumnya;
+                            document.getElementById('setPengumuman').value = pengumuman;
+                            document.getElementById('setGopay').value = gopayNumber;
+                            document.getElementById('setQrisUrl').value = qrisUrl;
+
+                            renderDashboard();
+                            renderAdminPanel();
+                        }
+                    });
+
+                    updateStatusKoneksiUI(true);
+                } catch (err) {
+                    showToast("Firebase Error: Periksa kredensial Anda!", "error");
+                    updateStatusKoneksiUI(false);
+                }
+            } else {
+                updateStatusKoneksiUI(false);
+            }
+        }
+
+        function simpanConfigFirebase() {
+            const config = {
+                apiKey: document.getElementById('fbApiKey').value.trim(),
+                projectId: document.getElementById('fbProjectId').value.trim(),
+                databaseURL: document.getElementById('fbDbUrl').value.trim(),
+                appId: document.getElementById('fbAppId').value.trim()
+            };
+
+            if (!config.apiKey || !config.databaseURL) {
+                showToast("Kredensial Firebase tidak boleh kosong!", "error");
+                return;
+            }
+
+            localStorage.removeItem('kasOrg_fbDisconnected');
+            localStorage.setItem('kasOrg_fbConfig', JSON.stringify(config));
+            showToast("Konfigurasi disimpan! Memuat koneksi cloud...", "success");
+            
+            // Reload halaman singkat untuk inisialisasi ulang sdk
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        }
+
+        function putusConfigFirebase() {
+            localStorage.removeItem('kasOrg_fbConfig');
+            localStorage.setItem('kasOrg_fbDisconnected', 'true');
+            showToast("Koneksi cloud diputuskan. Kembali ke sistem database lokal.", "success");
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        }
+
+        function updateStatusKoneksiUI(online) {
+            const badge = document.getElementById('cloudStatusBadge');
+            if (online) {
+                badge.className = "text-[10px] px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5 bg-emerald-500/25 text-emerald-300 border border-emerald-500/30";
+                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> 🟢 Online (Cloud Sync)`;
+            } else {
+                badge.className = "text-[10px] px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5 bg-slate-700/50 text-slate-300 border border-slate-600";
+                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Lokal (Belum Sinkron)`;
+            }
+        }
+
+        // Sinkronisasi data ke cloud jika database aktif
+        function syncDataKeCloud() {
+            if (isFirebaseActive && firebaseDB) {
+                firebaseDB.ref('kas_sosma').set({
+                    dataAnggota: dataAnggota,
+                    riwayatKas: riwayatKas,
+                    pengumuman: pengumuman,
+                    kasSebelumnya: kasSebelumnya,
+                    nominalIuran: nominalIuran,
+                    configBulan: configBulan,
+                    configTahun: configTahun,
+                    gopayNumber: gopayNumber,
+                    qrisUrl: qrisUrl
+                }).catch(() => {
+                    showToast("Gagal menyelaraskan data ke cloud online!", "error");
+                });
+            } else {
+                simpanState();
+            }
         }
 
         // Kalkulasi & Rendering Utama Laporan Transparansi
@@ -592,7 +822,7 @@
                     <tr class="hover:bg-slate-50 transition border-b border-slate-100">
                         <td class="p-4 pl-6 font-medium text-slate-800">${anggota.nama}</td>
                         <td class="p-4 text-center">
-                            <input type="checkbox" ${anggota.bayar ? 'checked' : ''} onchange="updateBayarAnggota(${index})" class="w-5 h-5 rounded text-teal-600 border-slate-300 focus:ring-teal-500">
+                            <input type="checkbox" ${anggota.bayar ? 'checked' : ''} onchange="updateBayarAnggota(${index})" class="w-5 h-5 rounded text-teal-600 border-slate-300 focus:ring-teal-500 text-center">
                         </td>
                     </tr>
                 `;
@@ -602,7 +832,7 @@
             renderAdminDaftarTransaksi();
         }
 
-        // Membangun Tabel Log Transaksi di Sisi Admin untuk Dihapus (BARU)
+        // Membangun Tabel Log Transaksi di Sisi Admin untuk Dihapus
         function renderAdminDaftarTransaksi() {
             let html = '';
             if (riwayatKas.length === 0) {
@@ -628,7 +858,7 @@
                                 ${isMasuk ? '+' : '-'} ${formatKeuangan(item.nominal)}
                             </td>
                             <td class="p-4 text-center">
-                                <button onclick="hapusTransaksi(${item.id})" class="text-rose-500 hover:text-rose-700 p-2 text-xs transition-colors" title="Hapus Transaksi">
+                                <button onclick="mintaHapusTransaksi(${item.id})" class="text-rose-500 hover:text-rose-700 p-2 text-xs transition-colors" title="Hapus Transaksi">
                                     <i class="fas fa-trash-alt"></i> Hapus
                                 </button>
                             </td>
@@ -642,7 +872,7 @@
         // Update Pembayaran via Checklist
         function updateBayarAnggota(index) {
             dataAnggota[index].bayar = !dataAnggota[index].bayar;
-            simpanState();
+            syncDataKeCloud();
             renderDashboard();
         }
 
@@ -658,6 +888,7 @@
             localStorage.setItem('kasOrg_nominalIuran', nominalIuran);
             localStorage.setItem('kasOrg_kasSebelumnya', kasSebelumnya);
 
+            syncDataKeCloud();
             renderDashboard();
         }
 
@@ -668,14 +899,16 @@
 
             localStorage.setItem('kasOrg_gopay', gopayNumber);
             localStorage.setItem('kasOrg_qris', qrisUrl);
+            syncDataKeCloud();
         }
 
         // Simpan Pengumuman / Catatan dari Admin
         function simpanCatatan() {
             pengumuman = document.getElementById('setPengumuman').value;
             localStorage.setItem('kasOrg_pengumuman', pengumuman);
+            syncDataKeCloud();
             renderDashboard();
-            alert("Pengumuman berhasil diperbarui!");
+            showToast("Pengumuman berhasil diperbarui!", "success");
         }
 
         // Tambah Transaksi Manual ke Buku Kas
@@ -687,7 +920,7 @@
             const setTanggal = document.getElementById('transTanggal').value; // Tanggal Kustom
 
             if (nominal <= 0 || keterangan === '') {
-                alert("Nominal dan keterangan tidak boleh kosong!");
+                showToast("Nominal dan keterangan tidak boleh kosong!", "error");
                 return;
             }
 
@@ -707,66 +940,159 @@
             document.getElementById('transNominal').value = '';
             document.getElementById('transKet').value = '';
 
+            syncDataKeCloud();
             renderDashboard();
             renderAdminPanel();
-            alert("Transaksi baru sukses dimasukkan ke Buku Kas!");
+            showToast("Transaksi berhasil dimasukkan ke Buku Kas!", "success");
         }
 
-        // Hapus Transaksi Buku Kas Manual Berdasarkan ID (BARU)
-        function hapusTransaksi(id) {
-            if (confirm("Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini akan memengaruhi total kas.")) {
-                riwayatKas = riwayatKas.filter(item => item.id !== id);
-                localStorage.setItem('kasOrg_riwayat', JSON.stringify(riwayatKas));
-                
-                renderDashboard();
-                renderAdminPanel();
-                alert("Transaksi berhasil dihapus dari pembukuan.");
-            }
+        // Minta konfirmasi hapus transaksi (Tanpa confirm)
+        function mintaHapusTransaksi(id) {
+            showConfirm(
+                "Batalkan Transaksi?", 
+                "Apakah Anda yakin ingin membatalkan transaksi ini? Tindakan ini akan memengaruhi sisa kas.",
+                () => eksekusiHapusTransaksi(id)
+            );
         }
 
-        // Ekspor Buku Kas SOSMA ke Excel (Format CSV) (BARU)
+        // Hapus Transaksi Buku Kas Manual Berdasarkan ID
+        function eksekusiHapusTransaksi(id) {
+            riwayatKas = riwayatKas.filter(item => item.id !== id);
+            localStorage.setItem('kasOrg_riwayat', JSON.stringify(riwayatKas));
+            
+            syncDataKeCloud();
+            renderDashboard();
+            renderAdminPanel();
+            showToast("Transaksi berhasil dihapus dari pembukuan.", "success");
+        }
+
+        // Ekspor Buku Kas SOSMA ke Excel (Format CSV)
         function eksporKeExcel() {
-            if (riwayatKas.length === 0) {
-                alert("Belum ada riwayat transaksi untuk diekspor!");
-                return;
-            }
+    let csvContent = "data:text/csv;charset=utf-8,";
+    
+    // Bagian 1: Status Anggota
+    csvContent += "STATUS IURAN ANGGOTA\n";
+    csvContent += "Nama,Status\n";
+    Object.keys(dbStatusWarga).forEach(nama => {
+        csvContent += `"${nama}","${dbStatusWarga[nama] ? 'Lunas' : 'Belum Lunas'}"\n`;
+    });
 
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Tanggal,Kategori,Keterangan,Tipe,Nominal\r\n";
+    // Bagian 2: Riwayat Kas
+    csvContent += "\nBUKU ARUS KAS\n";
+    csvContent += "Tanggal,Keterangan,Kategori,Jenis,Nominal\n";
+    dbRiwayatKas.forEach(item => {
+        csvContent += `"${item.tanggal}","${item.keterangan}","${item.kategori}","${item.tipe}",${item.nominal}\n`;
+    });
 
-            riwayatKas.forEach(item => {
-                let formattedTanggal = item.tanggal;
-                let formattedKet = item.keterangan.replace(/,/g, " "); // Cegah koma merusak kolom
-                let tipeStatus = item.tipe === 'masuk' ? "Pemasukan" : "Pengeluaran";
-                csvContent += `${formattedTanggal},${item.kategori || 'SOSMA'},${formattedKet},${tipeStatus},${item.nominal}\r\n`;
-            });
+    // Proses Download
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `LAPORAN_LENGKAP_KAS_SOSMA_${configDasar.bulan}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
 
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `Laporan_KAS_SOSMA_${configBulan}_${configTahun}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+        // EKSPOR DATABASE KE FILE JSON CADANGAN
+        function eksporDatabase() {
+            const bundleData = {
+                dataAnggota: dataAnggota,
+                riwayatKas: riwayatKas,
+                pengumuman: pengumuman,
+                kasSebelumnya: kasSebelumnya,
+                nominalIuran: nominalIuran,
+                configBulan: configBulan,
+                configTahun: configTahun,
+                gopayNumber: gopayNumber,
+                qrisUrl: qrisUrl
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(bundleData, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `Cadangan_Database_KAS_SOSMA_${configBulan}_${configTahun}.json`);
+            dlAnchorElem.click();
+        }
+
+        // IMPOR DATABASE DARI FILE JSON
+        function imporDatabase(event) {
+            const fileReader = new FileReader();
+            const file = event.target.files[0];
+
+            if (!file) return;
+
+            fileReader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (importedData && importedData.dataAnggota && importedData.riwayatKas) {
+                        showConfirm(
+                            "Pulihkan Database?",
+                            "Menimpa data lokal dengan cadangan file ini akan menyelaraskan pembukuan di HP Anda saat ini.",
+                            () => eksekusiImporDatabase(importedData)
+                        );
+                    } else {
+                        showToast("Format cadangan JSON tidak didukung!", "error");
+                    }
+                } catch (err) {
+                    showToast("Gagal membaca file JSON cadangan!", "error");
+                }
+            };
+            fileReader.readAsText(file);
+        }
+
+        function eksekusiImporDatabase(importedData) {
+            dataAnggota = importedData.dataAnggota;
+            riwayatKas = importedData.riwayatKas;
+            pengumuman = importedData.pengumuman || pengumuman;
+            kasSebelumnya = importedData.kasSebelumnya || 0;
+            nominalIuran = importedData.nominalIuran || 10000;
+            configBulan = importedData.configBulan || "Juni";
+            configTahun = importedData.configTahun || "2026";
+            gopayNumber = importedData.gopayNumber || gopayNumber;
+            qrisUrl = importedData.qrisUrl || qrisUrl;
+
+            localStorage.setItem('kasOrg_dataAnggota', JSON.stringify(dataAnggota));
+            localStorage.setItem('kasOrg_riwayat', JSON.stringify(riwayatKas));
+            localStorage.setItem('kasOrg_pengumuman', pengumuman);
+            localStorage.setItem('kasOrg_kasSebelumnya', kasSebelumnya);
+            localStorage.setItem('kasOrg_nominalIuran', nominalIuran);
+            localStorage.setItem('kasOrg_bulan', configBulan);
+            localStorage.setItem('kasOrg_tahun', configTahun);
+            localStorage.setItem('kasOrg_gopay', gopayNumber);
+            localStorage.setItem('kasOrg_qris', qrisUrl);
+
+            syncDataKeCloud();
+            initApp();
+            showToast("Database Kas SOSMA disinkronkan!", "success");
+        }
+
+        // Pemicu konfirmasi reset total (Tanpa confirm)
+        function mintaResetStatus() {
+            showConfirm(
+                "Bersihkan Seluruh Pembukuan?",
+                "Apakah Anda yakin ingin me-reset status bayar dan menghapus riwayat transaksi? Tindakan ini tidak dapat dibatalkan.",
+                () => eksekusiResetStatus()
+            );
         }
 
         // Reset Total Pembukuan & Status untuk Periode Baru
-        function resetSemuaStatus() {
-            if (confirm("Apakah Anda yakin ingin membersihkan seluruh riwayat kas dan status iuran? Tindakan ini tidak dapat dibatalkan.")) {
-                dataAnggota.forEach(a => { a.bayar = false; });
-                riwayatKas = [];
-                kasSebelumnya = 0;
-                
-                localStorage.setItem('kasOrg_kasSebelumnya', 0);
-                document.getElementById('setKasSebelumnya').value = 0;
-                
-                localStorage.removeItem('kasOrg_riwayat');
-                simpanState();
+        function eksekusiResetStatus() {
+            dataAnggota.forEach(a => { a.bayar = false; });
+            riwayatKas = [];
+            kasSebelumnya = 0;
+            
+            localStorage.setItem('kasOrg_kasSebelumnya', 0);
+            document.getElementById('setKasSebelumnya').value = 0;
+            
+            localStorage.removeItem('kasOrg_riwayat');
+            simpanState();
 
-                renderDashboard();
-                renderAdminPanel();
-                alert("Semua iuran bulanan dan buku kas berhasil dibersihkan!");
-            }
+            syncDataKeCloud();
+            renderDashboard();
+            renderAdminPanel();
+            showToast("Buku kas & iuran berhasil dibersihkan!", "success");
         }
 
         // Penyimpanan Database LocalStorage
@@ -856,7 +1182,7 @@
         // Fungsi Modal Instruksi Pembayaran QRIS / GoPay
         function openModalBayar() {
             document.getElementById('gopayNum').innerText = gopayNumber;
-            document.getElementById('qrisImg').src = qrisUrl;
+            document.getElementById('qrisImg').src = "https://i.ibb.co.com/8x2p9w4/hPLFsY4.jpg";
             document.getElementById('modalBayar').classList.remove('hidden');
         }
 
@@ -864,18 +1190,60 @@
             document.getElementById('modalBayar').classList.add('hidden');
         }
 
+        // Clipboard copy compatibility guardrail
         function salinGopay() {
             const tempInput = document.createElement("input");
             tempInput.value = gopayNumber;
             document.body.appendChild(tempInput);
             tempInput.select();
-            document.execCommand("copy"); // Fallback kompatibilitas iFrame
+            document.execCommand('copy'); 
             document.body.removeChild(tempInput);
-            alert("Nomor GoPay Bendahara berhasil disalin ke papan klip!");
+            showToast("Nomor GoPay Bendahara berhasil disalin!", "success");
+        }
+
+        // TOAST NOTIFIKASI KUSTOM (Menggantikan alert)
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            toast.className = `p-4 rounded-xl shadow-lg text-white text-xs font-bold flex items-center gap-2 transition duration-300 transform translate-y-5 opacity-0 ${type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'}`;
+            toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i> ${message}`;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-5', 'opacity-0');
+            }, 50);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-5', 'opacity-0');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // DIALOG KONFIRMASI KUSTOM (Menggantikan confirm)
+        let customConfirmCallback = null;
+        function showConfirm(title, message, onConfirm) {
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmMessage').innerText = message;
+            document.getElementById('confirmModal').classList.remove('hidden');
+            customConfirmCallback = onConfirm;
+        }
+
+        function handleConfirmModalResponse(isYes) {
+            document.getElementById('confirmModal').classList.add('hidden');
+            if (isYes && customConfirmCallback) {
+                customConfirmCallback();
+            }
+            customConfirmCallback = null;
         }
 
         // Inisialisasi Aplikasi Saat Membuka Halaman
-        initApp();
+        window.onload = function () {
+            initApp();
+        };
     </script>
 </body>
 </html>
