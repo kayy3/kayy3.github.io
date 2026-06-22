@@ -74,7 +74,7 @@
                         <!-- Input Khusus Validasi Bypass untuk Master Admin -->
                         <div id="divBypassAkses" class="hidden flex items-center gap-1 bg-purple-50 p-1.5 rounded-lg border border-purple-200">
                             <label class="text-[11px] text-purple-700 font-bold whitespace-nowrap">Validasi Kode PJ:</label>
-                            <input type="text" id="inputCodeBypass" oninput="cekBypassCode(this.value)" class="p-1 text-xs border rounded w-24 uppercase font-bold" placeholder="tanya Tim PT">
+                            <input type="text" id="inputCodeBypass" oninput="cekBypassCode(this.value)" class="p-1 text-xs border rounded w-24 uppercase font-bold" placeholder="Contoh: S3N">
                         </div>
                         <span class="text-xs font-semibold" id="labelTipeLogin"></span>
                     </div>
@@ -240,24 +240,14 @@
             6: { nama: "Dafa", hari: "Sabtu", pass: "S4B" },
             0: { nama: "Akma", hari: "Minggu", pass: "M1N" }
         };
-// ================= CONFIGURATION DATABASE =================
-        // Kunci Firebase Kamu yang Sudah Siap Pakai:
-        const firebaseConfig = {
-            apiKey: "AIzaSyAM7foVaVzxyGXaXbVipPAlLTUnO_PlxG8",
-            authDomain: "timtamu-51127.firebaseapp.com",
-            databaseURL: "https://timtamu-51127-default-rtdb.firebaseio.com",
-            projectId: "timtamu-51127",
-            storageBucket: "timtamu-51127.appspot.com",
-            messagingSenderId: "501228303713",
-            appId: "1:501228303713:web:a30b109f58af0df9838120"
-        };
+
         let loginType = null; 
         let pjNamaOtomatis = ""; 
         let masterBypassAktif = false; // Status bypass perubahan data untuk Master
 
-       let daftarTamu = [];
-let daftarBooking = [];
-let daftarNotes = [];
+        let daftarTamu = JSON.parse(localStorage.getItem('asrama_tamu_v4')) || [];
+        let daftarBooking = JSON.parse(localStorage.getItem('asrama_booking_v4')) || [];
+        let daftarNotes = JSON.parse(localStorage.getItem('asrama_notes_v4')) || [];
 
         function init() {
             updateWaktuDanPj();
