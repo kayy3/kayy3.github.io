@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Pantau Tamu Asrama v4 - Security Lock</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes noticeMe {
+            0%, 100% { transform: scale(1); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+            50% { transform: scale(1.02); box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3); }
+        }
+        .animasi-note { animation: noticeMe 3s infinite ease-in-out; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen pb-12">
+
+    <!-- TOP NAVIGATION BAR -->
+    <nav class="bg-blue-900 text-white shadow-lg p-4 sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center flex-wrap gap-3">
+            <div>
+                <h1 class="text-xl font-bold flex items-center gap-2">🏢 Monitor Tamu Asrama</h1>
+                <p class="text-xs text-blue-200" id="liveClock">Memuat waktu...</p>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-950 px-3 py-1.5 rounded-lg text-xs font-semibold" id="infoPjHariIni">
+                    Loading PJ...
+                </div>
+                <div class="flex bg-blue-950 rounded-lg p-1 text-sm">
+                    <button id="btnRoleUser" onclick="logoutAdmin()" class="px-3 py-1.5 rounded-md bg-white text-blue-900 font-semibold shadow">
+                        👥 Orang Biasa
+                    </button>
+                    <button id="btnRoleAdmin" onclick="bukaModalLogin()" class="px-3 py-1.5 rounded-md text-white font-semibold">
+                        ⚡ Login Tim Tamu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 mt-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <!-- SIDEBAR LEFT -->
+        <div class="lg:col-span-1 space-y-6">
+            <!-- Checklist Tugas PJ -->
+            <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-xl shadow-sm">
+                <h3 class="font-bold text-amber-800 text-sm flex items-center gap-1">⚠️ Tugas PJ Hari Ini (<span id="namaPjTugas"></span>)</h3>
+                <ul class="text-xs text-amber-900 mt-2 space-y-2 list-disc list-inside">
+                    <li>Kontrol semua kamar secara berkala.</li>
+                    <li>Pastikan tamu sudah dikasih makan.</li>
+                    <li>Cek apakah surat pengantar sudah dibalikin saat pulang.</li>
+                </ul>
+            </div>
+
+            <!-- Sticky Notes Board -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-gray-700 text-sm">📌 Catatan Penting Tim</h3>
+                    <button onclick="bukaModalNote()" class="text-xs bg-blue-600 text-white px-2 py-1 rounded hidden" id="btnTambahNote">📎 Tambah</button>
+                </div>
+                <div id="boardNotes" class="space-y-4"></div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT RIGHT -->
+        <div class="lg:col-span-3 space-y-8">
+            
+            <!-- PANEL INPUT DATA -->
+            <div id="panelAdmin" class="hidden bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                <div class="border-b pb-3 mb-4 flex justify-between items-center flex-wrap gap-2">
+                    <h2 class="text-lg font-bold text-gray-800">➕ Panel Input Tim Tamu</h2>
+                    <div class="flex items-center gap-2">
+                        <!-- Input Khusus Validasi Bypass untuk Master Admin -->
+                        <div id="divBypassAkses" class="hidden flex items-center gap-1 bg-purple-50 p-1.5 rounded-lg border border-purple-200">
+                            <label class="text-[11px] text-purple-700 font-bold whitespace-nowrap">Validasi Kode PJ:</label>
+                            <input type="text" id="inputCodeBypass" oninput="cekBypassCode(this.value)" class="p-1 text-xs border rounded w-24 uppercase font-bold" placeholder="tanya Tim PT">
+                        </div>
+                        <span class="text-xs font-semibold" id="labelTipeLogin"></span>
+                    </div>
+                </div>
+                
+                <form onsubmit="prosesSimpanForm(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Kategori Input</label>
+                        <select id="kategoriInput" onchange="switchModeInput(this.value)" class="p-2 border rounded-md text-sm bg-gray-50 font-semibold text-blue-800">
+                            <option value="AKTIF">Tamu Datang Hari Ini (Langsung Aktif)</option>
+                            <option value="BOOKING" id="optBooking">Booking Kamar (Rencana Datang)</option>
+                        </select>
+                        <p id="alertBookingLock" class="text-xs text-red-500 mt-1 hidden">⚠️ Akun Master memerlukan validasi Kode PJ harian di atas untuk mengaktifkan fitur booking dan hapus data.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Utama / Atas Nama</label>
+                            <input type="text" id="namaUtama" required class="w-full p-2 border rounded-md text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Pilih Kamar</label>
+                            <select id="kamarSelect" onchange="cekKamarCustom(this.value)" class="w-full p-2 border rounded-md text-sm">
+                                <option value="Kamar Besar">Kamar Besar</option>
+                                <option value="Kamar Kecil">Kamar Kecil</option>
+                                <option value="CUSTOM">Isi Kamar Sendiri...</option>
+                            </select>
+                            <input type="text" id="kamarCustom" placeholder="Ketik nama kamar..." class="w-full p-2 border rounded-md text-sm mt-1 hidden">
+                        </div>
+                        
+                        <!-- Waktu Tamu Aktif -->
+                        <div id="divWaktuAktif">
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal & Jam Keluar (Auto Hapus)</label>
+                            <input type="datetime-local" id="waktuKeluar" class="w-full p-2 border rounded-md text-sm">
+                        </div>
+
+                        <!-- Waktu Rencana Booking -->
+                        <div id="divWaktuBookingMasuk" class="hidden">
+                            <label class="block text-xs font-semibold text-blue-700 mb-1">Rencana Masuk (Check-In)</label>
+                            <input type="date" id="bookMasuk" class="w-full p-2 border border-blue-300 rounded-md text-sm bg-blue-50">
+                        </div>
+                        <div id="divWaktuBookingKeluar" class="hidden">
+                            <label class="block text-xs font-semibold text-blue-700 mb-1">Rencana Keluar (Check-Out)</label>
+                            <input type="date" id="bookKeluar" class="w-full p-2 border border-blue-300 rounded-md text-sm bg-blue-50">
+                        </div>
+                    </div>
+
+                    <!-- Input Jumlah Orang khusus Mode Booking -->
+                    <div id="boxKapasitasBooking" class="hidden bg-blue-50 p-4 rounded-lg border border-blue-200 grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-blue-900 mb-1">Total Orang Booking</label>
+                            <input type="number" id="bookTotalOrang" min="1" value="1" class="w-full p-2 border rounded text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-blue-900 mb-1">Jumlah Cowo</label>
+                            <input type="number" id="bookJmlCowo" min="0" value="0" class="w-full p-2 border rounded text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-blue-900 mb-1">Jumlah Cewe</label>
+                            <input type="number" id="bookJmlCewe" min="0" value="0" class="w-full p-2 border rounded text-sm">
+                        </div>
+                    </div>
+
+                    <!-- Input Anggota Rombongan Detail khusus Mode Aktif -->
+                    <div class="bg-gray-50 p-4 rounded-lg border" id="boxRombongan">
+                        <h3 class="text-xs font-bold text-gray-700 uppercase mb-2">Daftar Orang / Anggota Rombongan</h3>
+                        <div id="wrapperAnggota" class="space-y-2">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 item-anggota">
+                                <input type="text" placeholder="Nama Orang" class="p-2 border rounded text-sm f-nama">
+                                <select class="p-2 border rounded text-sm f-jk"><option value="Cowo">Cowo</option><option value="Cewe">Cewe</option></select>
+                                <select onchange="cekHubunganCustom(this)" class="p-2 border rounded text-sm f-hub-select">
+                                    <option value="Keluarga">Keluarga</option><option value="Teman">Teman</option><option value="Istri">Istri</option><option value="Anak">Anak</option><option value="Ponakan">Ponakan</option><option value="Sepupu">Sepupu</option><option value="CUSTOM">Isi Sendiri...</option>
+                                </select>
+                                <input type="text" placeholder="Hubungan lainnya..." class="p-2 border rounded text-sm mt-1 hidden f-hub-custom sm:col-span-3">
+                            </div>
+                        </div>
+                        <button type="button" onclick="tambahBarisAnggota()" class="mt-2 text-xs bg-gray-200 text-gray-700 font-semibold px-3 py-1 rounded hover:bg-gray-300">+ Tambah Orang</button>
+                    </div>
+
+                    <div class="flex justify-end gap-2">
+                        <div id="divInputPjManual">
+                            <input type="text" id="pjInput" placeholder="Nama PJ Penginput" class="p-2 border rounded text-sm">
+                        </div>
+                        <button type="submit" id="btnSubmitForm" class="bg-green-600 text-white font-bold px-6 py-2 rounded shadow text-sm hover:bg-green-700">Simpan Data</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- TABEL DAFTAR TAMU AKTIF -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden border">
+                <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-800">🔴 Tamu Aktif Saat Ini</h2>
+                        <p class="text-xs text-gray-500">Otomatis terhapus jika melewati batas jam keluar kalender.</p>
+                    </div>
+                    <span class="bg-red-100 text-red-800 text-xs px-3 py-1 rounded-full font-bold" id="totalTamu">Total: 0</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 text-xs uppercase font-semibold border-b">
+                                <th class="p-4">Nama Utama / Kamar</th>
+                                <th class="p-4">Rombongan (Detail)</th>
+                                <th class="p-4">Batas Keluar</th>
+                                <th class="p-4 text-center">Logistik & Berkas</th>
+                                <th class="p-4 text-center KolomAdmin hidden">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelTamuBody" class="divide-y text-gray-600"></tbody>
+                    </table>
+                </div>
+                <div id="dataKosong" class="p-8 text-center text-gray-400 hidden">📭 Tidak ada tamu aktif saat ini.</div>
+            </div>
+
+            <!-- BAGIAN DAFTAR BOOKING -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden border">
+                <div class="bg-blue-50 px-6 py-4 border-b">
+                    <h2 class="text-lg font-bold text-blue-900">📅 Jadwal Rencana Booking Tamu</h2>
+                    <p class="text-xs text-blue-700">Daftar pesanan kamar asrama mendatang yang dikelompokkan berdasarkan bulan.</p>
+                </div>
+                <div class="p-6 space-y-6" id="containerBookingBulan"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL LOGIN ADMIN -->
+    <div id="modalLogin" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 rounded-xl max-w-sm w-full shadow-2xl">
+            <h3 class="font-bold text-gray-800 text-lg mb-2">🔐 Keamanan Tim Tamu</h3>
+            <p class="text-xs text-gray-500 mb-4">Silakan masukkan password otentikasi tim untuk mengedit data.</p>
+            <input type="password" id="inputPass" class="w-full p-2 border rounded-md mb-4" placeholder="Ketik sandi disini...">
+            <div class="flex justify-end gap-2 text-sm">
+                <button onclick="tutupModalLogin()" class="px-4 py-2 text-gray-500">Batal</button>
+                <button onclick="prosesLogin()" class="px-4 py-2 bg-blue-600 text-white rounded font-semibold">Masuk</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TAMBAH STICKY NOTE -->
+    <div id="modalNote" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 rounded-xl max-w-sm w-full shadow-2xl">
+            <h3 class="font-bold text-gray-800 text-md mb-2">📌 Buat Catatan Baru</h3>
+            <textarea id="textNote" class="w-full p-2 border rounded-md mb-3 text-sm" placeholder="Isi pengumuman operasional..."></textarea>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Durasi Aktif (Jam)</label>
+            <input type="number" id="durasiNote" min="1" value="2" class="w-full p-2 border rounded-md mb-4 text-sm">
+            <div class="flex justify-end gap-2 text-sm">
+                <button onclick="tutupModalNote()" class="px-4 py-2 text-gray-500">Batal</button>
+                <button onclick="simpanNote()" class="px-4 py-2 bg-blue-600 text-white rounded font-semibold">Tempel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= LOGIC JAVASCRIPT ================= -->
+    <script>
+        const PASS_UTAMA = "29karakter";
+        const JADWAL_PJ = {
+            1: { nama: "Dinda", hari: "Senin", pass: "S3N" },
+            2: { nama: "Indri", hari: "Selasa", pass: "S3L" },
+            3: { nama: "Fahril", hari: "Rabu", pass: "R4B" },
+            4: { nama: "Kayis", hari: "Kamis", pass: "K4M" },
+            5: { nama: "Faiz", hari: "Jumat", pass: "JUM" },
+            6: { nama: "Dafa", hari: "Sabtu", pass: "S4B" },
+            0: { nama: "Akma", hari: "Minggu", pass: "M1N" }
+        };
+// ================= CONFIGURATION DATABASE =================
+        // Kunci Firebase Kamu yang Sudah Siap Pakai:
+        const firebaseConfig = {
+            apiKey: "AIzaSyAM7foVaVzxyGXaXbVipPAlLTUnO_PlxG8",
+            authDomain: "timtamu-51127.firebaseapp.com",
+            databaseURL: "https://timtamu-51127-default-rtdb.firebaseio.com",
+            projectId: "timtamu-51127",
+            storageBucket: "timtamu-51127.appspot.com",
+            messagingSenderId: "501228303713",
+            appId: "1:501228303713:web:a30b109f58af0df9838120"
+        };
+        let loginType = null; 
+        let pjNamaOtomatis = ""; 
+        let masterBypassAktif = false; // Status bypass perubahan data untuk Master
+
+       let daftarTamu = [];
+let daftarBooking = [];
+let daftarNotes = [];
+
+        function init() {
+            updateWaktuDanPj();
+            setInterval(updateWaktuDanPj, 1000);
+            setInterval(autoCekKadaluarsa, 5000);
+            autoCekKadaluarsa();
+            renderTamu();
+            renderBooking();
+            renderNotes();
+        }
+
+        function updateWaktuDanPj() {
+            const sekarang = new Date();
+            document.getElementById('liveClock').innerText = BirdFormatWaktu(sekarang);
+            const hariAngka = sekarang.getDay();
+            const pjSekarang = JADWAL_PJ[hariAngka];
+            document.getElementById('infoPjHariIni').innerText = `📅 PJ Aktif: ${pjSekarang.nama} (${pjSekarang.hari})`;
+            document.getElementById('namaPjTugas').innerText = pjSekarang.nama;
+        }
+
+        function BirdFormatWaktu(d) {
+            return d.toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'medium' });
+        }
+
+        function autoCekKadaluarsa() {
+            const sekarangMs = Date.now();
+            daftarTamu = daftarTamu.filter(tamu => new Date(tamu.waktuKeluar).getTime() > sekarangMs);
+            daftarNotes = daftarNotes.filter(note => note.waktuKadaluarsa > sekarangMs);
+            localStorage.setItem('asrama_tamu_v4', JSON.stringify(daftarTamu));
+            localStorage.setItem('asrama_notes_v4', JSON.stringify(daftarNotes));
+            renderTamu();
+            renderNotes();
+        }
+
+        function bukaModalLogin() { document.getElementById('modalLogin').classList.remove('hidden'); }
+        function tutupModalLogin() { document.getElementById('modalLogin').classList.add('hidden'); document.getElementById('inputPass').value=''; }
+        
+        function prosesLogin() {
+            const input = document.getElementById('inputPass').value;
+            const hariAngka = new Date().getDay();
+            const pjHariIni = JADWAL_PJ[hariAngka];
+
+            if (input === PASS_UTAMA) {
+                loginType = 'MASTER';
+                pjNamaOtomatis = "Master Admin";
+                masterBypassAktif = false; // Awal login wajib read-only untuk aksi hapus/booking
+                SetupAksesPanel();
+            } else if (input === pjHariIni.pass) {
+                loginType = 'PJ_HARIAN';
+                pjNamaOtomatis = pjHariIni.nama;
+                masterBypassAktif = true; // PJ harian otomatis punya hak penuh sesuai harinya
+                SetupAksesPanel();
+            } else {
+                alert("❌ Akses ditolak. Kata sandi tidak valid.");
+            }
+        }
+
+        function SetupAksesPanel() {
+            document.getElementById('panelAdmin').classList.remove('hidden');
+            document.getElementById('btnTambahNote').classList.remove('hidden');
+            document.getElementById('btnRoleAdmin').className = "px-3 py-1.5 rounded-md bg-green-600 text-white font-semibold shadow";
+            document.getElementById('btnRoleUser').className = "px-3 py-1.5 rounded-md text-white font-semibold";
+            
+            const lbl = document.getElementById('labelTipeLogin');
+            const divPjManual = document.getElementById('divInputPjManual');
+            const divBypass = document.getElementById('divBypassAkses');
+            
+            if (loginType === 'MASTER') {
+                lbl.innerText = "Mode Akses: Master Utama (Terproteksi)";
+                lbl.className = "text-xs font-semibold bg-purple-100 text-purple-800 px-3 py-1 rounded-full";
+                divPjManual.classList.remove('hidden');
+                document.getElementById('pjInput').required = true;
+                divBypass.classList.remove('hidden'); // Munculkan kolom bypass kode harian
+            } else {
+                lbl.innerText = `Mode Akses: PJ ${pjNamaOtomatis}`;
+                lbl.className = "text-xs font-semibold bg-amber-100 text-amber-800 px-3 py-1 rounded-full";
+                divPjManual.classList.add('hidden');
+                document.getElementById('pjInput').required = false;
+                divBypass.classList.add('hidden');
+            }
+            switchModeInput(document.getElementById('kategoriInput').value);
+            tutupModalLogin();
+            renderTamu();
+            renderBooking();
+            renderNotes();
+        }
+
+        // FUNGSI CEK BYPASS KODE PJ UNTUK MASTER
+        function cekBypassCode(val) {
+            const kodeBersih = val.toUpperCase().trim();
+            // Cari apakah kode cocok dengan salah satu kode di daftar jadwal PJ tanpa melihat hari
+            let kodeValid = false;
+            for (let key in JADWAL_PJ) {
+                if (JADWAL_PJ[key].pass === kodeBersih) {
+                    kodeValid = true;
+                    break;
+                }
+            }
+
+            if (kodeValid) {
+                masterBypassAktif = true;
+                document.getElementById('labelTipeLogin').innerText = "Mode Akses: Master (Akses Hapus/Booking Terbuka)";
+                document.getElementById('labelTipeLogin').className = "text-xs font-semibold bg-green-100 text-green-800 px-3 py-1 rounded-full";
+            } else {
+                masterBypassAktif = false;
+                document.getElementById('labelTipeLogin').innerText = "Mode Akses: Master Utama (Terproteksi)";
+                document.getElementById('labelTipeLogin').className = "text-xs font-semibold bg-purple-100 text-purple-800 px-3 py-1 rounded-full";
+            }
+            switchModeInput(document.getElementById('kategoriInput').value);
+            renderTamu();
+            renderBooking();
+        }
+
+        function logoutAdmin() {
+            loginType = null; pjNamaOtomatis = ""; masterBypassAktif = false;
+            document.getElementById('inputCodeBypass').value = "";
+            document.getElementById('panelAdmin').classList.add('hidden');
+            document.getElementById('btnTambahNote').classList.add('hidden');
+            document.getElementById('btnRoleUser').className = "px-3 py-1.5 rounded-md bg-white text-blue-900 font-semibold shadow";
+            document.getElementById('btnRoleAdmin').className = "px-3 py-1.5 rounded-md text-white font-semibold";
+            renderTamu(); renderBooking(); renderNotes();
+        }
+
+        function switchModeInput(mode) {
+            const isBooking = (mode === 'BOOKING');
+            document.getElementById('divWaktuAktif').classList.toggle('hidden', isBooking);
+            document.getElementById('boxRombongan').classList.toggle('hidden', isBooking);
+            document.getElementById('divWaktuBookingMasuk').classList.toggle('hidden', !isBooking);
+            document.getElementById('divWaktuBookingKeluar').classList.toggle('hidden', !isBooking);
+            document.getElementById('boxKapasitasBooking').classList.toggle('hidden', !isBooking); // Field jumlah orang booking
+            
+            // Kunci fitur booking jika login master belum mengisi kode bypass harian
+            if (isBooking && !masterBypassAktif) {
+                document.getElementById('alertBookingLock').classList.remove('hidden');
+                document.getElementById('btnSubmitForm').disabled = true;
+                document.getElementById('btnSubmitForm').className = "bg-gray-400 text-white font-bold px-6 py-2 rounded text-sm cursor-not-allowed";
+            } else {
+                document.getElementById('alertBookingLock').classList.add('hidden');
+                document.getElementById('btnSubmitForm').disabled = false;
+                document.getElementById('btnSubmitForm').className = "bg-green-600 text-white font-bold px-6 py-2 rounded shadow text-sm hover:bg-green-700";
+            }
+        }
+
+        function cekKamarCustom(val) { document.getElementById('kamarCustom').classList.toggle('hidden', val !== 'CUSTOM'); }
+        function cekHubunganCustom(el) { el.parentElement.parentElement.querySelector('.f-hub-custom').classList.toggle('hidden', el.value !== 'CUSTOM'); }
+
+        function tambahBarisAnggota() {
+            const wrapper = document.getElementById('wrapperAnggota');
+            const div = document.createElement('div');
+            div.className = "grid grid-cols-1 sm:grid-cols-3 gap-2 item-anggota border-t pt-2 mt-2";
+            div.innerHTML = `
+                <input type="text" placeholder="Nama Orang" required class="p-2 border rounded text-sm f-nama">
+                <select class="p-2 border rounded text-sm f-jk"><option value="Cowo">Cowo</option><option value="Cewe">Cewe</option></select>
+                <div class="flex gap-1">
+                    <select onchange="cekHubunganCustom(this)" class="p-2 border rounded text-sm f-hub-select w-full">
+                        <option value="Keluarga">Keluarga</option><option value="Teman">Teman</option><option value="Istri">Istri</option><option value="Anak">Anak</option><option value="Ponakan">Ponakan</option><option value="Sepupu">Sepupu</option><option value="CUSTOM">Isi Sendiri...</option>
+                    </select>
+                    <button type="button" onclick="this.parentElement.parentElement.parentElement.remove()" class="text-red-500 font-bold px-2">X</button>
+                </div>
+                <input type="text" placeholder="Hubungan lainnya..." class="p-2 border rounded text-sm mt-1 hidden f-hub-custom sm:col-span-3">
+            `;
+            wrapper.appendChild(div);
+        }
+
+        function prosesSimpanForm(e) {
+            e.preventDefault();
+            const mode = document.getElementById('kategoriInput').value;
+            const namaUtama = document.getElementById('namaUtama').value;
+            const selectKamar = document.getElementById('kamarSelect').value;
+            const kamar = selectKamar === 'CUSTOM' ? document.getElementById('kamarCustom').value : selectKamar;
+            const pjFinal = loginType === 'MASTER' ? document.getElementById('pjInput').value : pjNamaOtomatis;
+
+            if (mode === 'AKTIF') {
+                const waktuKeluar = document.getElementById('waktuKeluar').value;
+                const barisAnggota = document.querySelectorAll('.item-anggota');
+                let listAnggota = [];
+                barisAnggota.forEach(baris => {
+                    const nama = baris.querySelector('.f-nama').value;
+                    if(!nama) return;
+                    const jk = baris.querySelector('.f-jk').value;
+                    const selHub = baris.querySelector('.f-hub-select').value;
+                    const hub = selHub === 'CUSTOM' ? baris.querySelector('.f-hub-custom').value : selHub;
+                    listAnggota.push({ nama, jk, hubungan: hub });
+                });
+
+                daftarTamu.push({ id: Date.now(), namaUtama, kamar, waktuKeluar, pjInput: pjFinal, anggota: listAnggota, sudahMakan: false, suratKembali: false });
+                localStorage.setItem('asrama_tamu_v4', JSON.stringify(daftarTamu));
+                renderTamu();
+            } else {
+                // Simpan Data Booking dengan Rincian Jumlah Anggota Rombongan
+                const tglMasuk = document.getElementById('bookMasuk').value;
+                const tglKeluar = document.getElementById('bookKeluar').value;
+                const totalOrang = document.getElementById('bookTotalOrang').value;
+                const cowo = document.getElementById('bookJmlCowo').value;
+                const cewe = document.getElementById('bookJmlCewe').value;
+                
+                daftarBooking.push({ id: Date.now(), namaUtama, kamar, tglMasuk, tglKeluar, pjInput: pjFinal, kapasitas: { totalOrang, cowo, cewe } });
+                localStorage.setItem('asrama_booking_v4', JSON.stringify(daftarBooking));
+                renderBooking();
+            }
+
+            e.target.reset();
+            document.getElementById('kamarCustom').classList.add('hidden');
+            switchModeInput(document.getElementById('kategoriInput').value);
+        }
+
+        function ubahLogistik(id, tipe) {
+            daftarTamu = daftarTamu.map(t => {
+                if (t.id === id) {
+                    if (tipe === 'makan') t.sudahMakan = !t.sudahMakan;
+                    if (tipe === 'surat') t.suratKembali = !t.suratKembali;
+                }
+                return t;
+            });
+            localStorage.setItem('asrama_tamu_v4', JSON.stringify(daftarTamu));
+            renderTamu();
+        }
+
+        function hapusTamuManual(id) {
+            if(!masterBypassAktif) { alert("❌ Akun Master terproteksi! Masukkan Kode PJ Harian di kolom atas untuk mengaktifkan fitur hapus data."); return; }
+            if(confirm("Hapus tamu aktif ini?")) {
+                daftarTamu = daftarTamu.filter(t => t.id !== id);
+                localStorage.setItem('asrama_tamu_v4', JSON.stringify(daftarTamu));
+                renderTamu();
+            }
+        }
+
+        function batalkanBooking(id) {
+            if(!masterBypassAktif) { alert("❌ Akun Master terproteksi! Masukkan Kode PJ Harian di kolom atas untuk membatalkan booking."); return; }
+            if(confirm("Apakah Anda yakin ingin membatalkan booking kamar ini?")) {
+                daftarBooking = daftarBooking.filter(b => b.id !== id);
+                localStorage.setItem('asrama_booking_v4', JSON.stringify(daftarBooking));
+                renderBooking();
+            }
+        }
+
+        function renderTamu() {
+            const tbody = document.getElementById('tabelTamuBody');
+            const dataKosong = document.getElementById('dataKosong');
+            document.getElementById('totalTamu').innerText = `Total: ${daftarTamu.length}`;
+            tbody.innerHTML = '';
+
+            document.querySelectorAll('.KolomAdmin').forEach(el => loginType ? el.classList.remove('hidden') : el.classList.add('hidden'));
+            if (daftarTamu.length === 0) { dataKosong.classList.remove('hidden'); return; }
+            dataKosong.classList.add('hidden');
+
+            daftarTamu.forEach(tamu => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 border-b align-top";
+                let htmlAnggota = '<ul class="list-disc list-inside space-y-0.5 text-xs">';
+                tamu.anggota.forEach(ang => { htmlAnggota += `<li><strong>${ang.nama}</strong> (${ang.jk}) - <span class="text-blue-600">${ang.hubungan}</span></li>`; });
+                htmlAnggota += '</ul>';
+
+                const tglFormat = new Date(tamu.waktuKeluar).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
+                
+                // Tombol Hapus dikunci atau diberikan kelas pudar jika status bypass belum terpenuhi
+                const btnHapusClass = masterBypassAktif ? "bg-red-600 hover:bg-red-700" : "bg-gray-400 cursor-not-allowed opacity-50";
+
+                let tombolAdminHtml = loginType ? `
+                    <td class="p-4 text-center space-y-1">
+                        <button onclick="ubahLogistik(${tamu.id}, 'makan')" class="block w-full text-[11px] bg-orange-500 text-white py-1 rounded shadow-sm">Logistik</button>
+                        <button onclick="ubahLogistik(${tamu.id}, 'surat')" class="block w-full text-[11px] bg-indigo-600 text-white py-1 rounded shadow-sm">Berkas</button>
+                        <button onclick="hapusTamuManual(${tamu.id})" class="block w-full text-[11px] text-white py-1 rounded font-semibold transition ${btnHapusClass}">Hapus</button>
+                    </td>` : '';
+
+                tr.innerHTML = `
+                    <td class="p-4"><div class="font-bold text-gray-900">${tamu.namaUtama}</div><div class="text-xs text-gray-500 mt-0.5">🏠 ${tamu.kamar}</div></td>
+                    <td class="p-4">${htmlAnggota}</td>
+                    <td class="p-4 text-xs font-semibold text-red-600">⏱️ ${tglFormat}</td>
+                    <td class="p-4 text-xs space-y-1 text-center">
+                        <div>${tamu.sudahMakan ? '🟢 Sudah Makan' : '🔴 Belum Makan'}</div>
+                        <div>${tamu.suratKembali ? '🟢 Surat Kembali' : '🔴 Surat Belum Balik'}</div>
+                        <div class="text-[10px] text-gray-400 block mt-1">PJ: ${tamu.pjInput}</div>
+                    </td>${tombolAdminHtml}
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderBooking() {
+            const container = document.getElementById('containerBookingBulan');
+            container.innerHTML = '';
+            
+            if(daftarBooking.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">Tidak ada reservasi/booking kamar terjadwal.</p>';
+                return;
+            }
+
+            const listBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            let grupBulan = {};
+
+            daftarBooking.forEach(b => {
+                const d = new Date(b.tglMasuk);
+                const namaBulan = listBulan[d.getMonth()] + " " + d.getFullYear();
+                if(!grupBulan[namaBulan]) grupBulan[namaBulan] = [];
+                grupBulan[namaBulan].push(b);
+            });
+
+            for (let bulan in grupBulan) {
+                const divBulan = document.createElement('div');
+                divBulan.className = "border rounded-lg p-4 bg-gray-50 shadow-inner";
+                
+                let htmlHeaderBulan = `<h3 class="font-bold text-blue-900 text-sm mb-3 border-b pb-1 uppercase tracking-wider">🗓️ List Bulan ${bulan}</h3>`;
+                let htmlListTamu = `<div class="grid grid-cols-1 md:grid-cols-2 gap-3">`;
+                
+                grupGaris = grupBulan[bulan];
+                grupGaris.forEach(b => {
+                    const tglIn = new Date(b.tglMasuk).toLocaleDateString('id-ID', { dateStyle: 'medium' });
+                    const tglOut = new Date(b.tglKeluar).toLocaleDateString('id-ID', { dateStyle: 'medium' });
+                    
+                    const kps = b.kapasitas ? b.kapasitas : { totalOrang: 1, cowo: 0, cewe: 0 };
+                    const btnBatalClass = masterBypassAktif ? "bg-red-100 text-red-600 hover:bg-red-200" : "bg-gray-200 text-gray-400 cursor-not-allowed opacity-60";
+
+                    let btnAksiBatal = loginType ? `<button onclick="batalkanBooking(${b.id})" class="text-xs font-bold px-2 py-1 rounded mt-2 transition ${btnBatalClass}">❌ Batalkan Booking</button>` : '';
+
+                    htmlListTamu += `
+                        <div class="bg-white p-3 rounded-md border shadow-sm flex justify-between items-start">
+                            <div class="w-full">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-bold text-gray-800 text-sm">${b.namaUtama}</h4>
+                                    <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full">👥 ${kps.totalOrang} Orang</span>
+                                </div>
+                                <p class="text-xs text-purple-700 font-medium mt-0.5">🏠 Kamar: ${b.kamar}</p>
+                                <div class="text-[11px] text-gray-600 bg-gray-50 px-2 py-1 rounded mt-1 font-mono">
+                                    Detail: 🧑 Cowo: ${kps.cowo} | 👩 Cewe: ${kps.cewe}
+                                </div>
+                                <p class="text-[11px] text-gray-500 mt-1.5">📅 ${tglIn} s/d ${tglOut}</p>
+                                <span class="text-[10px] text-gray-400 block mt-1">Rencana oleh: ${b.pjInput}</span>
+                                ${btnAksiBatal}
+                            </div>
+                        </div>`;
+                });
+                htmlListTamu += `</div>`;
+                divBulan.innerHTML = htmlHeaderBulan + htmlListTamu;
+                container.appendChild(divBulan);
+            }
+        }
+
+        // STICKY NOTES BOARD
+        function bukaModalNote() { document.getElementById('modalNote').classList.remove('hidden'); }
+        function tutupModalNote() { document.getElementById('modalNote').classList.add('hidden'); document.getElementById('textNote').value=''; }
+        
+        function simpanNote() {
+            const isi = document.getElementById('textNote').value;
+            const durasiJam = parseFloat(document.getElementById('durasiNote').value) || 2;
+            if(!isi) return;
+
+            daftarNotes.push({ id: Date.now(), teks: isi, pembuat: loginType, waktuKadaluarsa: Date.now() + (durasiJam * 60 * 60 * 1000) });
+            localStorage.setItem('asrama_notes_v4', JSON.stringify(daftarNotes));
+            tutupModalNote();
+            renderNotes();
+        }
+
+        function hapusNote(id) {
+            daftarNotes = daftarNotes.filter(n => n.id !== id);
+            localStorage.setItem('asrama_notes_v4', JSON.stringify(daftarNotes));
+            renderNotes();
+        }
+
+        function renderNotes() {
+            const board = document.getElementById('boardNotes');
+            board.innerHTML = '';
+            if(daftarNotes.length === 0) {
+                board.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">Tidak ada catatan penting aktif.</p>';
+                return;
+            }
+            daftarNotes.forEach(n => {
+                const sisaMenit = Math.round((n.waktuKadaluarsa - Date.now()) / 60000);
+                const sisaTeks = sisaMenit > 60 ? `${Math.floor(sisaMenit/60)} Jam lagi` : `${sisaMenit} Menit lagi`;
+                
+                const skemaWarna = n.pembuat === 'MASTER' 
+                    ? 'bg-cyan-100 border-cyan-400 text-cyan-900' 
+                    : 'bg-yellow-100 border-yellow-400 text-yellow-900';
+
+                const div = document.createElement('div');
+                div.className = `${skemaWarna} border-2 p-3 rounded-xl text-xs relative shadow-md animasi-note`;
+                div.innerHTML = `
+                    <p class="font-semibold pr-4 leading-relaxed">${n.teks}</p>
+                    <div class="text-[10px] opacity-75 mt-3 font-bold flex justify-between items-center">
+                        <span>⏳ Aktif: ${sisaTeks}</span>
+                        ${loginType ? `<button onclick="focusHapusNote(${n.id})" class="text-red-600 font-extrabold hover:underline">Hapus</button>` : ''}
+                    </div>
+                `;
+                board.appendChild(div);
+            });
+        }
+
+        function focusHapusNote(id) {
+            if(!masterBypassAktif) { alert("❌ Tombol hapus dikunci untuk Akun Master biasa, isi Kode PJ Harian terlebih dahulu!"); return; }
+            hapusNote(id);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
